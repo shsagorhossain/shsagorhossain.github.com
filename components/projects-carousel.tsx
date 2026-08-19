@@ -1,0 +1,249 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import Image from "next/image";
+import { ChevronsLeft, ChevronsRight, ExternalLink, LoaderCircle } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+
+type Project = {
+  title: string;
+  description: string;
+  image: string;
+  tags: string[];
+  href: string;
+  actionLabel: string;
+  badge?: string;
+};
+
+const projects: Project[] = [
+  {
+    title: "Zappilo - AI Communication Platform",
+    description: "WhatsApp conversations, AI workforce, CRM, automation, and scheduling in one product.",
+    image: "/projects/zappilo/homepage-social.jpg",
+    tags: ["Next.js", "React", "Django"],
+    href: "/projects/zappilo/",
+    actionLabel: "View Zappilo case study",
+    badge: "Case Study",
+  },
+  {
+    title: "MSL Lab - WhatsApp Marketing",
+    description: "WhatsApp marketing with contact management, campaigns, and analytics.",
+    image: "/projects/msl-lab.png",
+    tags: ["Django", "React", "PostgreSQL"],
+    href: "#contact",
+    actionLabel: "Ask about MSL Lab - WhatsApp Marketing",
+  },
+  {
+    title: "Personal Cost Management System",
+    description: "Desktop software for managing personal finances and expenses efficiently.",
+    image: "/projects/cost-manager.jpg",
+    tags: ["Python", "CustomTkinter", "SQLite"],
+    href: "#contact",
+    actionLabel: "Ask about Personal Cost Management System",
+  },
+  {
+    title: "E-Commerce Operations Dashboard",
+    description: "Demo commerce workspace for products, orders, customers, and sales reporting.",
+    image: "/projects/ecommerce-dashboard.jpg",
+    tags: ["Next.js", "Django", "PostgreSQL"],
+    href: "#contact",
+    actionLabel: "Ask about E-Commerce Operations Dashboard",
+    badge: "Demo",
+  },
+  {
+    title: "Smart Appointment Booking",
+    description: "Demo scheduling experience with service selection, reminders, and availability.",
+    image: "/projects/appointment-booking.jpg",
+    tags: ["React", "REST API", "Calendar"],
+    href: "#contact",
+    actionLabel: "Ask about Smart Appointment Booking",
+    badge: "Demo",
+  },
+  {
+    title: "Learning Management Portal",
+    description: "Demo education platform for courses, student progress, and instructor workflows.",
+    image: "/projects/learning-portal.jpg",
+    tags: ["Django", "Next.js", "PostgreSQL"],
+    href: "#contact",
+    actionLabel: "Ask about Learning Management Portal",
+    badge: "Demo",
+  },
+  {
+    title: "Developer Collaboration Workspace",
+    description: "Demo project hub for tasks, code reviews, team updates, and release tracking.",
+    image: "/projects/developer-workspace.jpg",
+    tags: ["TypeScript", "WebSockets", "Docker"],
+    href: "#contact",
+    actionLabel: "Ask about Developer Collaboration Workspace",
+    badge: "Demo",
+  },
+];
+
+export function ProjectsCarousel() {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const navigationTimerRef = useRef<number | null>(null);
+  const reduceMotion = useReducedMotion();
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [currentProject, setCurrentProject] = useState(0);
+  const [loadingProject, setLoadingProject] = useState<string | null>(null);
+
+  const updateControls = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    const card = track.querySelector<HTMLElement>(".project-card");
+    if (card) {
+      const gap = Number.parseFloat(window.getComputedStyle(track).columnGap) || 16;
+      const nextProject = Math.min(projects.length - 1, Math.round(track.scrollLeft / (card.offsetWidth + gap)));
+      setCurrentProject(nextProject);
+      setCanScrollLeft(nextProject > 0);
+    }
+    setCanScrollRight(track.scrollLeft + track.clientWidth < track.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    updateControls();
+    track.addEventListener("scroll", updateControls, { passive: true });
+    const observer = new ResizeObserver(updateControls);
+    observer.observe(track);
+
+    return () => {
+      track.removeEventListener("scroll", updateControls);
+      observer.disconnect();
+    };
+  }, [updateControls]);
+
+  useEffect(() => () => {
+    if (navigationTimerRef.current) window.clearTimeout(navigationTimerRef.current);
+  }, []);
+
+  const scrollProjects = (direction: -1 | 1) => {
+    const track = trackRef.current;
+    const card = track?.querySelector<HTMLElement>(".project-card");
+    if (!track || !card) return;
+
+    const gap = Number.parseFloat(window.getComputedStyle(track).columnGap) || 16;
+    track.scrollBy({
+      left: direction * (card.offsetWidth + gap),
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
+  };
+
+  const openProject = (event: ReactMouseEvent<HTMLAnchorElement>, project: Project) => {
+    const isPrimaryClick = event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+    if (!isPrimaryClick || !project.href.startsWith("/") || loadingProject) return;
+
+    event.preventDefault();
+    setLoadingProject(project.title);
+
+    navigationTimerRef.current = window.setTimeout(() => {
+      window.location.assign(project.href);
+    }, reduceMotion ? 0 : 360);
+  };
+
+  return (
+    <div className="project-carousel">
+      <AnimatePresence>
+        {loadingProject && (
+          <motion.div
+            className="project-route-status"
+            role="status"
+            aria-live="assertive"
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -14, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: reduceMotion ? 0.01 : 0.24 }}
+          >
+            <span className="project-route-status-icon"><LoaderCircle size={19} /></span>
+            <span>
+              <small>Opening case study</small>
+              <strong>{loadingProject}</strong>
+            </span>
+            <motion.i
+              aria-hidden="true"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: reduceMotion ? 0.01 : 0.7, ease: "easeOut" }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="project-track" ref={trackRef} aria-label="Featured projects">
+        {projects.map((project, index) => {
+          const isLoading = loadingProject === project.title;
+          return (
+            <motion.article
+            className={`project-card ${isLoading ? "is-loading" : ""}`}
+            key={project.title}
+            initial={reduceMotion ? false : { opacity: 0, x: 24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, root: trackRef, amount: 0.3 }}
+            transition={{ duration: 0.5, delay: Math.min(index * 0.07, 0.21) }}
+            whileHover={reduceMotion ? undefined : { y: -5 }}
+          >
+            <a className="project-image" href={project.href} aria-label={project.actionLabel} onClick={(event) => openProject(event, project)}>
+              <Image src={project.image} alt={`${project.title} preview`} fill sizes="(max-width: 640px) 82vw, (max-width: 900px) 44vw, 30vw" />
+              {project.badge && <span className="project-badge">{project.badge}</span>}
+              <span className="project-image-action" aria-hidden="true">
+                {isLoading ? <LoaderCircle className="project-loading-spinner" size={16} /> : <ExternalLink size={15} />}
+              </span>
+              <AnimatePresence>
+                {isLoading && (
+                  <motion.span
+                    className="project-image-loading"
+                    aria-hidden="true"
+                    initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <LoaderCircle className="project-loading-spinner" size={25} />
+                    <strong>Opening details</strong>
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </a>
+            <h3><a href={project.href} onClick={(event) => openProject(event, project)}>{project.title}</a></h3>
+            <p>{project.description}</p>
+            <div className="tag-list">
+              {project.tags.map((tag) => <span key={tag}>{tag}</span>)}
+            </div>
+          </motion.article>
+          );
+        })}
+      </div>
+
+      <div className="carousel-footer">
+        <div className="carousel-position" aria-live="polite" aria-atomic="true">
+          <strong>{String(currentProject + 1).padStart(2, "0")}</strong>
+          <span aria-hidden="true" />
+          {String(projects.length).padStart(2, "0")}
+        </div>
+        <div className="carousel-controls">
+          <button
+            className="project-scroll-button project-scroll-left"
+            type="button"
+            aria-label="Scroll projects left"
+            disabled={!canScrollLeft}
+            onClick={() => scrollProjects(-1)}
+          >
+            <ChevronsLeft size={21} />
+          </button>
+          <button
+            className="project-scroll-button project-scroll-right"
+            type="button"
+            aria-label="Scroll projects right"
+            disabled={!canScrollRight}
+            onClick={() => scrollProjects(1)}
+          >
+            <ChevronsRight size={21} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
