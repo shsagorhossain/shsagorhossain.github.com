@@ -51,11 +51,11 @@ test("scrolls through all four featured projects", async ({ page }) => {
 
   const track = page.locator(".project-track");
   await expect(track.locator(".project-card")).toHaveCount(4);
+  await expect(track).toContainText("MSL Lab - Staff Operations Platform");
   await expect(page.getByRole("button", { name: "Scroll projects left" })).toBeDisabled();
 
   const initialPosition = await track.evaluate((element) => element.scrollLeft);
   await page.getByRole("button", { name: "Scroll projects right" }).click();
-
   await expect.poll(() => track.evaluate((element) => element.scrollLeft)).toBeGreaterThan(initialPosition);
 });
 
@@ -117,7 +117,7 @@ test("opens and sorts the complete project archive", async ({ page }) => {
   );
 
   await page.getByLabel("Sort projects").selectOption("az");
-  await expect(page.locator("main article").first().getByRole("heading")).toContainText("MSL Lab - WhatsApp Marketing");
+  await expect(page.locator("main article").first().getByRole("heading")).toContainText("MSL Lab - Staff Operations Platform");
 
   const sizes = await page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
@@ -126,6 +126,35 @@ test("opens and sorts the complete project archive", async ({ page }) => {
   expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
 });
 
+
+test("opens the private MSL Lab case study", async ({ page }) => {
+  await page.goto("/");
+
+  const projectLink = page.getByRole("link", { name: "View MSL Lab case study" });
+  await expect(projectLink).toHaveAttribute("href", "/projects/msl-lab/");
+  await projectLink.evaluate((link) => (link as HTMLAnchorElement).click());
+  await expect(page.getByRole("status")).toContainText("Opening case study");
+
+  const detailPage = await page.context().newPage();
+  await detailPage.goto("/projects/msl-lab/");
+  await expect(detailPage).toHaveURL(/\/projects\/msl-lab\/$/);
+  await expect(detailPage.getByRole("heading", { name: "MSL Lab", exact: true })).toBeVisible();
+  await expect(detailPage.getByAltText("MSL Lab BuildFlow staff workspace with sanitized data").first()).toBeVisible();
+
+  const liveProduct = detailPage.getByRole("link", { name: "Visit Live Product" }).first();
+  await expect(liveProduct).toHaveAttribute("href", "https://lab.mohuls.com/login");
+  await expect(liveProduct).toHaveAttribute("target", "_blank");
+
+  await detailPage.getByRole("tab", { name: /Product registry/ }).click();
+  await expect(detailPage.getByRole("tabpanel")).toContainText("Every application has an operational record");
+
+  const sizes = await detailPage.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+  await detailPage.close();
+});
 
 test("opens the One Lifestyle commerce case study", async ({ page }) => {
   await page.goto("/");

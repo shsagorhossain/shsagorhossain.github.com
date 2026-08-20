@@ -1061,7 +1061,7 @@ p {
 
 .project-scroll-button {
   position: absolute;
-  top: calc(50% - 7px);
+  top: 103px;
   z-index: 8;
   display: grid;
   width: 42px;
@@ -1894,6 +1894,7 @@ footer {
     width: auto;
   }
   .project-card { flex-basis: calc((100% - 16px) / 2); }
+  .project-scroll-button { top: 93px; }
   .testimonial-card { flex-basis: calc((100% - 16px) / 2); }
 }
 
@@ -1965,6 +1966,7 @@ footer {
     height: 44px;
     transform: translateY(-50%);
   }
+  .project-scroll-button { top: 72px; }
   .project-scroll-button:hover:not(:disabled),
   .testimonial-scroll-button:hover:not(:disabled) { transform: translateY(-50%) scale(1.04); }
   .project-scroll-button:disabled,

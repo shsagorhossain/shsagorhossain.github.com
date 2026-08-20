@@ -6,6 +6,8 @@ import { ChevronsLeft, ChevronsRight, ExternalLink, LoaderCircle } from "lucide-
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { projects, type PortfolioProject } from "@/data/projects";
 
+const featuredProjects = projects.filter((project) => project.featured);
+
 export function ProjectsCarousel() {
   const trackRef = useRef<HTMLDivElement>(null);
   const navigationTimerRef = useRef<number | null>(null);
@@ -22,7 +24,7 @@ export function ProjectsCarousel() {
     const card = track.querySelector<HTMLElement>(".project-card");
     if (card) {
       const gap = Number.parseFloat(window.getComputedStyle(track).columnGap) || 16;
-      const nextProject = Math.min(projects.length - 1, Math.round(track.scrollLeft / (card.offsetWidth + gap)));
+      const nextProject = Math.min(featuredProjects.length - 1, Math.round(track.scrollLeft / (card.offsetWidth + gap)));
       setCurrentProject(nextProject);
       setCanScrollLeft(nextProject > 0);
     }
@@ -101,7 +103,7 @@ export function ProjectsCarousel() {
       </AnimatePresence>
 
       <div className="project-track" ref={trackRef} aria-label="Featured projects">
-        {projects.map((project, index) => {
+        {featuredProjects.map((project, index) => {
           const isLoading = loadingProject === project.title;
           return (
             <motion.article
@@ -148,7 +150,7 @@ export function ProjectsCarousel() {
         <div className="carousel-position" aria-live="polite" aria-atomic="true">
           <strong>{String(currentProject + 1).padStart(2, "0")}</strong>
           <span aria-hidden="true" />
-          {String(projects.length).padStart(2, "0")}
+          {String(featuredProjects.length).padStart(2, "0")}
         </div>
         <div className="carousel-controls">
           <button
