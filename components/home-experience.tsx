@@ -208,7 +208,7 @@ export function HomeHero() {
           ><Code2 size={27} /></motion.div>
           <Image
             className="portrait"
-            src="/sagor-hossain.png"
+            src="/sagor-hossain.webp"
             alt="Sagor Hossain"
             fill
             priority

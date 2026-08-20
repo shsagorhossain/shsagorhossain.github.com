@@ -135,19 +135,19 @@ const principles = [
 
 const gallery = [
   {
-    src: "/projects/zappilo/platform-overview-social.jpg",
+    src: "/projects/zappilo/platform-overview-social.webp",
     alt: "Zappilo platform overview showing connected communication tools",
     label: "Connected platform",
     index: "01",
   },
   {
-    src: "/projects/zappilo/crm-social.jpg",
+    src: "/projects/zappilo/crm-social.webp",
     alt: "Zappilo CRM product visualization",
     label: "Customer context",
     index: "02",
   },
   {
-    src: "/projects/zappilo/automation-social.jpg",
+    src: "/projects/zappilo/automation-social.webp",
     alt: "Zappilo automation product visualization",
     label: "Workflow automation",
     index: "03",
@@ -224,7 +224,7 @@ export function ZappiloExperience() {
       <header className={styles.header}>
         <div className={styles.shell}>
           <Link className={styles.brand} href="/" aria-label="Sagor Hossain portfolio home">
-            <Image src="/sh-logo.png" alt="" width={72} height={48} priority />
+            <Image src="/sh-logo.webp" alt="" width={72} height={48} priority />
           </Link>
           <Link className={styles.backLink} href="/#projects">
             <ArrowLeft size={16} />
@@ -302,7 +302,7 @@ export function ZappiloExperience() {
                 <strong><CircleDot size={10} />Live</strong>
               </div>
               <Image
-                src="/projects/zappilo/landing-page.png"
+                src="/projects/zappilo/landing-page.webp"
                 alt="Zappilo live landing page"
                 fill
                 priority

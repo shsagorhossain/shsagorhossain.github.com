@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import {
   ArrowRight,
   Mail,
@@ -40,10 +41,10 @@ export default function Home() {
               <p>My Work</p>
               <h2>Featured Projects</h2>
             </div>
-            <a className="text-link" href="https://github.com/shsagorhossain" target="_blank" rel="noreferrer">
+            <Link className="text-link" href="/projects/">
               View All Projects
               <ArrowRight size={16} />
-            </a>
+            </Link>
           </HomeReveal>
           <ProjectsCarousel />
         </HomeSection>
@@ -62,7 +63,7 @@ export default function Home() {
       <footer>
         <div className="site-shell footer-inner">
           <a className="brand" href="#home" aria-label="Back to top">
-            <Image className="brand-logo" src="/sh-logo.png" alt="" width={72} height={48} />
+            <Image className="brand-logo" src="/sh-logo.webp" alt="" width={72} height={48} />
           </a>
           <p>Full Stack Developer based in Bangladesh.</p>
           <div className="social-links">

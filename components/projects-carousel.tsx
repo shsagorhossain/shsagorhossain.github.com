@@ -4,80 +4,7 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouse
 import Image from "next/image";
 import { ChevronsLeft, ChevronsRight, ExternalLink, LoaderCircle } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-
-type Project = {
-  title: string;
-  description: string;
-  image: string;
-  tags: string[];
-  href: string;
-  actionLabel: string;
-  badge?: string;
-};
-
-const projects: Project[] = [
-  {
-    title: "Zappilo - AI Communication Platform",
-    description: "WhatsApp conversations, AI workforce, CRM, automation, and scheduling in one product.",
-    image: "/projects/zappilo/homepage-social.jpg",
-    tags: ["Next.js", "React", "Django"],
-    href: "/projects/zappilo/",
-    actionLabel: "View Zappilo case study",
-    badge: "Case Study",
-  },
-  {
-    title: "MSL Lab - WhatsApp Marketing",
-    description: "WhatsApp marketing with contact management, campaigns, and analytics.",
-    image: "/projects/msl-lab.png",
-    tags: ["Django", "React", "PostgreSQL"],
-    href: "#contact",
-    actionLabel: "Ask about MSL Lab - WhatsApp Marketing",
-  },
-  {
-    title: "Personal Cost Management System",
-    description: "Desktop software for managing personal finances and expenses efficiently.",
-    image: "/projects/cost-manager.jpg",
-    tags: ["Python", "CustomTkinter", "SQLite"],
-    href: "#contact",
-    actionLabel: "Ask about Personal Cost Management System",
-  },
-  {
-    title: "E-Commerce Operations Dashboard",
-    description: "Demo commerce workspace for products, orders, customers, and sales reporting.",
-    image: "/projects/ecommerce-dashboard.jpg",
-    tags: ["Next.js", "Django", "PostgreSQL"],
-    href: "#contact",
-    actionLabel: "Ask about E-Commerce Operations Dashboard",
-    badge: "Demo",
-  },
-  {
-    title: "Smart Appointment Booking",
-    description: "Demo scheduling experience with service selection, reminders, and availability.",
-    image: "/projects/appointment-booking.jpg",
-    tags: ["React", "REST API", "Calendar"],
-    href: "#contact",
-    actionLabel: "Ask about Smart Appointment Booking",
-    badge: "Demo",
-  },
-  {
-    title: "Learning Management Portal",
-    description: "Demo education platform for courses, student progress, and instructor workflows.",
-    image: "/projects/learning-portal.jpg",
-    tags: ["Django", "Next.js", "PostgreSQL"],
-    href: "#contact",
-    actionLabel: "Ask about Learning Management Portal",
-    badge: "Demo",
-  },
-  {
-    title: "Developer Collaboration Workspace",
-    description: "Demo project hub for tasks, code reviews, team updates, and release tracking.",
-    image: "/projects/developer-workspace.jpg",
-    tags: ["TypeScript", "WebSockets", "Docker"],
-    href: "#contact",
-    actionLabel: "Ask about Developer Collaboration Workspace",
-    badge: "Demo",
-  },
-];
+import { projects, type PortfolioProject } from "@/data/projects";
 
 export function ProjectsCarousel() {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -133,7 +60,7 @@ export function ProjectsCarousel() {
     });
   };
 
-  const openProject = (event: ReactMouseEvent<HTMLAnchorElement>, project: Project) => {
+  const openProject = (event: ReactMouseEvent<HTMLAnchorElement>, project: PortfolioProject) => {
     const isPrimaryClick = event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
     if (!isPrimaryClick || !project.href.startsWith("/") || loadingProject) return;
 

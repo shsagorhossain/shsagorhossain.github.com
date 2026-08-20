@@ -1977,6 +1977,7 @@ footer {
   .contact-path { right: -40px; bottom: 28px; width: 240px; }
   .contact-button { margin-left: 0; }
   .testimonial-card { flex-basis: 84%; min-height: 315px; }
+  .testimonial-role { white-space: normal; line-height: 1.35; }
   .testimonials { padding-top: 52px; padding-bottom: 48px; }
   .footer-inner { flex-wrap: wrap; gap: 20px; justify-content: space-between; padding-block: 25px; }
   .footer-inner p { order: 3; width: 100%; margin: 0; }

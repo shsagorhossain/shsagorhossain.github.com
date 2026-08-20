@@ -87,7 +87,7 @@ export function Navigation() {
       <header className={`site-header ${open ? "menu-open" : ""}`}>
         <div className="site-shell nav-inner">
           <a className="brand" href="#home" onClick={closeMenu} aria-label="Sagor Hossain home">
-            <Image className="brand-logo" src="/sh-logo.png" alt="" width={72} height={48} priority />
+            <Image className="brand-logo" src="/sh-logo.webp" alt="" width={72} height={48} priority />
           </a>
 
           <nav className="nav-links" aria-label="Primary navigation">

@@ -15,6 +15,24 @@ const testimonials = [
     featured: true,
   },
   {
+    quote:
+      "Sagor built One Lifestyle BD with a clear understanding of both the customer journey and the daily operations behind it. The storefront feels polished, while products, orders, payments, delivery, and reporting stay organized in one reliable system.",
+    name: "Safquat",
+    role: "One Lifestyle BD Client · Bangladesh",
+    project: "One Lifestyle BD",
+    initials: "SQ",
+    featured: true,
+  },
+  {
+    quote:
+      "Sagor turned my personal finance workflow into an intuitive desktop application. Expense tracking feels simple, the reports are clear, and the overall experience is fast, organized, and thoughtfully designed.",
+    name: "Mohamed Saad",
+    role: "Personal Cost Management Client · Dubai, UAE",
+    project: "Cost Manager",
+    initials: "MS",
+    featured: true,
+  },
+  {
     quote: "Great work, thoughtfully delivered and finished right on time.",
     name: "Jack Garratt",
     role: "Freelance client",
