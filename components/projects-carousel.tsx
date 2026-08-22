@@ -46,8 +46,19 @@ export function ProjectsCarousel() {
     };
   }, [updateControls]);
 
-  useEffect(() => () => {
-    if (navigationTimerRef.current) window.clearTimeout(navigationTimerRef.current);
+  useEffect(() => {
+    const resetNavigationState = () => {
+      if (navigationTimerRef.current) window.clearTimeout(navigationTimerRef.current);
+      navigationTimerRef.current = null;
+      setLoadingProject(null);
+    };
+
+    window.addEventListener("pageshow", resetNavigationState);
+
+    return () => {
+      window.removeEventListener("pageshow", resetNavigationState);
+      if (navigationTimerRef.current) window.clearTimeout(navigationTimerRef.current);
+    };
   }, []);
 
   const scrollProjects = (direction: -1 | 1) => {
@@ -70,6 +81,7 @@ export function ProjectsCarousel() {
     setLoadingProject(project.title);
 
     navigationTimerRef.current = window.setTimeout(() => {
+      navigationTimerRef.current = null;
       window.location.assign(project.href);
     }, reduceMotion ? 0 : 360);
   };

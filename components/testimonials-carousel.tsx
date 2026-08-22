@@ -4,7 +4,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronsLeft, ChevronsRight, MapPin, Quote } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 
-const testimonials = [
+type Testimonial = {
+  quote: string;
+  name: string;
+  role: string;
+  initials: string;
+  project?: string;
+  featured?: boolean;
+  showLocation?: boolean;
+};
+
+const testimonials: Testimonial[] = [
   {
     quote:
       "Working with Sagor on Zappilo has been a strong experience. He understood the product vision, handled complex full-stack requirements with care, and consistently turned ideas into reliable, polished features.",
@@ -13,6 +23,7 @@ const testimonials = [
     project: "Zappilo Project",
     initials: "AS",
     featured: true,
+    showLocation: true,
   },
   {
     quote:
@@ -22,6 +33,7 @@ const testimonials = [
     project: "One Lifestyle BD",
     initials: "SQ",
     featured: true,
+    showLocation: true,
   },
   {
     quote:
@@ -31,24 +43,16 @@ const testimonials = [
     project: "Cost Manager",
     initials: "MS",
     featured: true,
+    showLocation: true,
   },
   {
-    quote: "Great work, thoughtfully delivered and finished right on time.",
-    name: "Jack Garratt",
-    role: "Freelance client",
-    initials: "JG",
-  },
-  {
-    quote: "A responsive collaborator who turned our ideas into a clear, polished result.",
-    name: "April M. Griffin",
-    role: "Founder",
-    initials: "AG",
-  },
-  {
-    quote: "Creative, reliable, and technically sharp. I would gladly work together again.",
-    name: "Larry M. Johnson",
-    role: "Freelance client",
-    initials: "LJ",
+    quote:
+      "Sagor played a key role in turning Mohuls.com and MSL Lab into two connected parts of our product ecosystem. He translated complex business, product, staff, and infrastructure requirements into polished public experiences and dependable internal workflows, with strong ownership from architecture through delivery.",
+    name: "Humaun Kabir",
+    role: "CEO, Mohuls Soft Limited",
+    project: "MSL Lab + Mohuls.com",
+    initials: "HK",
+    featured: true,
   },
 ];
 
@@ -127,7 +131,7 @@ export function TestimonialsCarousel() {
               <span className="testimonial-person">
                 <strong>{testimonial.name}</strong>
                 <span className="testimonial-role">
-                  {testimonial.featured && <MapPin size={11} />}
+                  {testimonial.showLocation && <MapPin size={11} />}
                   {testimonial.role}
                 </span>
               </span>

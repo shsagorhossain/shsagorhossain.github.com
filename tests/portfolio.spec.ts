@@ -46,12 +46,13 @@ test("animates career metrics to their final values", async ({ page }) => {
   await expect(page.getByText("1500+", { exact: true })).toBeVisible();
 });
 
-test("scrolls through all four featured projects", async ({ page }) => {
+test("scrolls through all five featured projects", async ({ page }) => {
   await page.goto("/");
 
   const track = page.locator(".project-track");
-  await expect(track.locator(".project-card")).toHaveCount(4);
+  await expect(track.locator(".project-card")).toHaveCount(5);
   await expect(track).toContainText("MSL Lab - Staff Operations Platform");
+  await expect(track).toContainText("Mohuls - Business Software Ecosystem");
   await expect(page.getByRole("button", { name: "Scroll projects left" })).toBeDisabled();
 
   const initialPosition = await track.evaluate((element) => element.scrollLeft);
@@ -63,9 +64,12 @@ test("scrolls through the horizontal client stories", async ({ page }) => {
   await page.goto("/");
 
   const track = page.locator(".testimonial-track");
-  await expect(track.locator(".testimonial-card")).toHaveCount(6);
+  await expect(track.locator(".testimonial-card")).toHaveCount(4);
   await expect(track).toContainText("Safquat");
   await expect(track).toContainText("Mohamed Saad");
+  await expect(track).toContainText("Humaun Kabir");
+  await expect(track).toContainText("MSL Lab + Mohuls.com");
+  await expect(track).toContainText("CEO, Mohuls Soft Limited");
   await expect(track).toContainText("Personal Cost Management Client · Dubai, UAE");
   await expect(track).toContainText("One Lifestyle BD");
   await expect(page.getByRole("button", { name: "Scroll client stories left" })).toBeDisabled();
@@ -104,20 +108,38 @@ test("opens the Zappilo case study from the project title", async ({ page }) => 
   await expect(page.getByRole("heading", { name: "Zappilo", exact: true })).toBeVisible();
 });
 
+test("clears the project loading state after returning with browser back", async ({ page }) => {
+  await page.goto("/");
+
+  const projectCard = page.locator(".project-card").filter({ hasText: "Zappilo - AI Communication Platform" });
+  await projectCard.getByRole("link", { name: "View Zappilo case study" }).click({ noWaitAfter: true });
+  await expect(page).toHaveURL(/\/projects\/zappilo\/$/);
+
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(projectCard).not.toHaveClass(/is-loading/);
+  await expect(page.getByText("Opening details", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("status")).toHaveCount(0);
+});
+
 test("opens and sorts the complete project archive", async ({ page }) => {
   await page.goto("/");
 
   await page.getByRole("link", { name: "View All Projects" }).click();
   await expect(page).toHaveURL(/\/projects\/$/);
   await expect(page.getByRole("heading", { name: "All Projects" })).toBeVisible();
-  await expect(page.locator("main article")).toHaveCount(4);
+  await expect(page.locator("main article")).toHaveCount(5);
   await expect(page.getByRole("link", { name: "View One Lifestyle BD case study" })).toHaveAttribute(
     "href",
     "/projects/one-lifestyle/",
   );
+  await expect(page.getByRole("link", { name: "View Mohuls case study" })).toHaveAttribute(
+    "href",
+    "/projects/mohuls/",
+  );
 
   await page.getByLabel("Sort projects").selectOption("az");
-  await expect(page.locator("main article").first().getByRole("heading")).toContainText("MSL Lab - Staff Operations Platform");
+  await expect(page.locator("main article").first().getByRole("heading")).toContainText("Mohuls - Business Software Ecosystem");
 
   const sizes = await page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
@@ -147,6 +169,36 @@ test("opens the private MSL Lab case study", async ({ page }) => {
 
   await detailPage.getByRole("tab", { name: /Product registry/ }).click();
   await expect(detailPage.getByRole("tabpanel")).toContainText("Every application has an operational record");
+
+  const sizes = await detailPage.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+  await detailPage.close();
+});
+
+test("opens the Mohuls business software ecosystem case study", async ({ page }) => {
+  await page.goto("/");
+
+  const projectLink = page.getByRole("link", { name: "View Mohuls case study" });
+  await expect(projectLink).toHaveAttribute("href", "/projects/mohuls/");
+  await projectLink.evaluate((link) => (link as HTMLAnchorElement).click());
+  await expect(page.getByRole("status")).toContainText("Opening case study");
+
+  const detailPage = await page.context().newPage();
+  await detailPage.goto("/projects/mohuls/");
+  await expect(detailPage).toHaveURL(/\/projects\/mohuls\/$/);
+  await expect(detailPage.getByRole("heading", { name: "Mohuls", exact: true })).toBeVisible();
+  await expect(detailPage.getByText("Business Software Ecosystem", { exact: true })).toBeVisible();
+  await expect(detailPage.getByAltText("Mohuls live homepage presenting the connected software suite").first()).toBeVisible();
+
+  const liveProduct = detailPage.getByRole("link", { name: "Visit Live Product" }).first();
+  await expect(liveProduct).toHaveAttribute("href", "https://www.mohuls.com");
+  await expect(liveProduct).toHaveAttribute("target", "_blank");
+
+  await detailPage.getByRole("tab", { name: /Codex Tool/ }).click();
+  await expect(detailPage.getByRole("tabpanel")).toContainText("AI-assisted chats");
 
   const sizes = await detailPage.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
