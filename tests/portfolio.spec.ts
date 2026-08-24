@@ -67,6 +67,25 @@ test("scrolls through all six featured projects", async ({ page }) => {
   await expect.poll(() => track.evaluate((element) => element.scrollLeft)).toBeGreaterThan(initialPosition);
 });
 
+test("shows insight categories and opens the featured article", async ({ page }) => {
+  await page.goto("/");
+
+  const insightsSection = page.locator("#insights");
+  await expect(insightsSection.getByRole("heading", { name: "Insights", exact: true })).toBeVisible();
+  await expect(insightsSection.locator(".insight-category-list li")).toHaveCount(10);
+  await expect(insightsSection).toContainText("Software Engineering");
+  await expect(insightsSection.getByRole("heading", { name: "Building Production-Ready Software Beyond the Happy Path" })).toBeVisible();
+
+  await insightsSection.getByRole("button", { name: "Read Insight" }).click();
+  const reader = page.getByRole("dialog", { name: "Building Production-Ready Software Beyond the Happy Path" });
+  await expect(reader).toBeVisible();
+  await expect(reader).toContainText("A compact production-readiness checklist");
+  await expect(reader.getByRole("listitem")).toHaveCount(6);
+
+  await reader.getByRole("button", { name: "Close insight" }).click();
+  await expect(reader).toBeHidden();
+});
+
 test("scrolls through the horizontal client stories", async ({ page }) => {
   await page.goto("/");
 

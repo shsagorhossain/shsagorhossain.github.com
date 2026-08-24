@@ -9,6 +9,7 @@ import { Navigation } from "@/components/navigation";
 import { ServicesNetwork } from "@/components/services-network";
 import { ProjectsCarousel } from "@/components/projects-carousel";
 import { TestimonialsCarousel } from "@/components/testimonials-carousel";
+import { InsightsShowcase } from "@/components/insights-showcase";
 import {
   HomeContactBanner,
   HomeHero,
@@ -47,6 +48,19 @@ export default function Home() {
             </Link>
           </HomeReveal>
           <ProjectsCarousel />
+        </HomeSection>
+
+        <HomeSection className="section insights" id="insights">
+          <div className="site-shell">
+            <HomeReveal className="section-heading-row insights-heading">
+              <div className="section-heading">
+                <p>Ideas in Practice</p>
+                <h2>Insights</h2>
+              </div>
+              <span className="insights-heading-meta">10 Editorial Categories · 1 Published</span>
+            </HomeReveal>
+            <InsightsShowcase />
+          </div>
         </HomeSection>
 
         <HomeContactBanner />
