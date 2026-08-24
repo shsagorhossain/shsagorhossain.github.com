@@ -1333,13 +1333,18 @@ p {
   gap: 16px;
   overflow-x: auto;
   padding: 1px 1px 8px;
-  scroll-behavior: smooth;
-  scroll-snap-type: x mandatory;
+  scroll-behavior: auto;
+  scroll-snap-type: none;
   scrollbar-width: none;
 }
 
 .testimonial-track::-webkit-scrollbar {
   display: none;
+}
+
+.testimonial-track:focus-visible {
+  outline: 2px solid #6c98ff;
+  outline-offset: 4px;
 }
 
 .testimonial-card {
@@ -1422,13 +1427,6 @@ p {
   margin-left: auto;
   color: #5f8eeb;
   opacity: 0.62;
-}
-
-.testimonial-index {
-  color: #627087;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 9px;
-  font-weight: 700;
 }
 
 .testimonial-project {
@@ -1565,9 +1563,73 @@ p {
 .testimonial-scroll-left { left: -21px; }
 .testimonial-scroll-right { right: -21px; }
 
+.testimonial-autoplay-button {
+  position: absolute;
+  top: -52px;
+  right: 0;
+  z-index: 8;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(102, 142, 225, 0.36);
+  border-radius: 7px;
+  color: #a9c1f7;
+  background: rgba(13, 23, 39, 0.9);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  cursor: pointer;
+  transition: border-color 180ms ease, color 180ms ease, background 180ms ease,
+    transform 180ms ease, opacity 180ms ease;
+}
+
+.testimonial-autoplay-button:hover:not(:disabled) {
+  border-color: #6694ff;
+  color: white;
+  background: #172a4d;
+  transform: translateY(-1px);
+}
+
+.testimonial-autoplay-button:focus-visible {
+  outline: 2px solid #6c98ff;
+  outline-offset: 3px;
+}
+
+.testimonial-autoplay-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.testimonial-autoplay-button > svg {
+  position: relative;
+  z-index: 2;
+}
+
+.testimonial-autoplay-button > span {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #4c86ff, #8159ef, #2cd883);
+  width: 42%;
+  animation: testimonial-autoplay-progress 2.8s linear infinite;
+}
+
+.testimonial-autoplay-button[data-paused="true"] > span {
+  opacity: 0.28;
+  animation: none;
+  transform: translateX(70%);
+}
+
 @keyframes testimonial-signal {
   0%, 100% { opacity: 0.35; transform: scaleY(0.7); }
   50% { opacity: 1; transform: scaleY(1); }
+}
+
+@keyframes testimonial-autoplay-progress {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(260%); }
 }
 
 footer {

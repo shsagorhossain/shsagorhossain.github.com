@@ -5,8 +5,9 @@ test("renders the portfolio without horizontal overflow", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "Sagor Hossain" })).toBeVisible();
   await expect(page.getByAltText("Sagor Hossain")).toBeVisible();
-  await expect(page.getByText("Arshad Sayed")).toBeVisible();
-  await expect(page.getByText("Zappilo Client · Dubai, UAE")).toBeVisible();
+  const firstClientStory = page.locator('.testimonial-card:not([aria-hidden="true"])').first();
+  await expect(firstClientStory).toContainText("Arshad Sayed");
+  await expect(firstClientStory).toContainText("Zappilo Client · Dubai, UAE");
 
   const sizes = await page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
@@ -51,9 +52,14 @@ test("scrolls through all six featured projects", async ({ page }) => {
 
   const track = page.locator(".project-track");
   await expect(track.locator(".project-card")).toHaveCount(6);
-  await expect(track).toContainText("MSL Lab - Staff Operations Platform");
-  await expect(track).toContainText("Mohuls - Business Software Ecosystem");
-  await expect(track).toContainText("BounceZip - Email Verification Platform");
+  await expect(track.locator(".project-card h3")).toHaveText([
+    "Zappilo - AI Communication Platform",
+    "One Lifestyle BD - E-Commerce Platform",
+    "BounceZip - Email Verification Platform",
+    "MSL Lab - Staff Operations Platform",
+    "Mohuls - Business Software Ecosystem",
+    "Personal Cost Management System",
+  ]);
   await expect(page.getByRole("button", { name: "Scroll projects left" })).toBeDisabled();
 
   const initialPosition = await track.evaluate((element) => element.scrollLeft);
@@ -65,27 +71,71 @@ test("scrolls through the horizontal client stories", async ({ page }) => {
   await page.goto("/");
 
   const track = page.locator(".testimonial-track");
-  await expect(track.locator(".testimonial-card")).toHaveCount(5);
+  await expect(track.locator('.testimonial-card:not([aria-hidden="true"])')).toHaveCount(6);
+  await expect(track.locator('.testimonial-card[aria-hidden="true"]')).toHaveCount(6);
   await expect(track).toContainText("Safquat");
   await expect(track).toContainText("Mohamed Saad");
   await expect(track).toContainText("Humaun Kabir");
   await expect(track).toContainText("MSL Lab + Mohuls.com");
   await expect(track).toContainText("Nasir Hosain");
   await expect(track).toContainText("BounceZip Client · Chittagong, Bangladesh");
+  await expect(track).toContainText("Roufur Rabin");
+  await expect(track).toContainText("Trusty Client · Bangladesh");
   await expect(track).toContainText("CEO, Mohuls Soft Limited");
   await expect(track).toContainText("Personal Cost Management Client · Dubai, UAE");
   await expect(track).toContainText("One Lifestyle BD");
-  await expect(page.getByRole("button", { name: "Scroll client stories left" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Scroll client stories left" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Scroll client stories right" })).toBeEnabled();
 
   const initialPosition = await track.evaluate((element) => element.scrollLeft);
   await page.getByRole("button", { name: "Scroll client stories right" }).click();
   await expect.poll(() => track.evaluate((element) => element.scrollLeft)).toBeGreaterThan(initialPosition);
 });
 
+test("continuously advances client stories and respects the pause control", async ({ page }) => {
+  await page.goto("/");
+
+  const track = page.locator(".testimonial-track");
+  await track.scrollIntoViewIfNeeded();
+  const pauseButton = page.getByRole("button", { name: "Pause automatic client story scrolling" });
+  await expect(pauseButton).toBeVisible();
+
+  const initialPosition = await track.evaluate((element) => element.scrollLeft);
+  await expect.poll(() => track.evaluate((element) => element.scrollLeft), { timeout: 7000 }).toBeGreaterThan(initialPosition);
+
+  await pauseButton.click();
+  const resumeButton = page.getByRole("button", { name: "Resume automatic client story scrolling" });
+  await expect(resumeButton).toHaveAttribute("aria-pressed", "true");
+  await page.waitForTimeout(700);
+  const pausedPosition = await track.evaluate((element) => element.scrollLeft);
+  await page.waitForTimeout(5800);
+  await expect(track).toHaveJSProperty("scrollLeft", pausedPosition);
+});
+
+test("continues from the final client story into the first without rewinding", async ({ page }) => {
+  await page.goto("/");
+
+  const track = page.locator(".testimonial-track");
+  await track.scrollIntoViewIfNeeded();
+  const loopPoint = await track.evaluate((element) => {
+    const cards = element.querySelectorAll<HTMLElement>(".testimonial-card");
+    const firstCard = cards[0];
+    const firstDuplicate = cards[6];
+    element.style.scrollBehavior = "auto";
+    const boundary = firstDuplicate.offsetLeft - firstCard.offsetLeft;
+    element.scrollLeft = boundary - 2;
+    return boundary;
+  });
+  expect(loopPoint).toBeGreaterThan(0);
+
+  await expect.poll(() => track.evaluate((element) => element.scrollLeft), { timeout: 2000 }).toBeLessThan(20);
+  await expect(track.locator('.testimonial-card[aria-hidden="true"]').first()).toContainText("Arshad Sayed");
+});
+
 test("opens the Zappilo project case study", async ({ page }) => {
   await page.goto("/");
 
-  await page.getByRole("link", { name: "View Zappilo case study" }).click({ noWaitAfter: true });
+  await page.getByRole("link", { name: "View Zappilo case study" }).evaluate((link) => (link as HTMLAnchorElement).click());
   await expect(page.getByRole("status")).toContainText("Opening case study");
   await expect(page).toHaveURL(/\/projects\/zappilo\/$/);
   await expect(page.getByRole("heading", { name: "Zappilo", exact: true })).toBeVisible();
@@ -132,6 +182,14 @@ test("opens and sorts the complete project archive", async ({ page }) => {
   await expect(page).toHaveURL(/\/projects\/$/);
   await expect(page.getByRole("heading", { name: "All Projects" })).toBeVisible();
   await expect(page.locator("main article")).toHaveCount(6);
+  await expect(page.locator("main article h3")).toHaveText([
+    "Zappilo - AI Communication Platform",
+    "One Lifestyle BD - E-Commerce Platform",
+    "BounceZip - Email Verification Platform",
+    "MSL Lab - Staff Operations Platform",
+    "Mohuls - Business Software Ecosystem",
+    "Personal Cost Management System",
+  ]);
   await expect(page.getByRole("link", { name: "View One Lifestyle BD case study" })).toHaveAttribute(
     "href",
     "/projects/one-lifestyle/",

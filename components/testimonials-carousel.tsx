@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronsLeft, ChevronsRight, MapPin, Quote } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, MapPin, Pause, Play, Quote } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
+
+const AUTO_SCROLL_SPEED = 20;
+const AUTO_RESUME_DELAY = 2600;
 
 type Testimonial = {
   quote: string;
@@ -64,6 +67,16 @@ const testimonials: Testimonial[] = [
     featured: true,
     showLocation: true,
   },
+  {
+    quote:
+      "Sagor gave Trusty a clean, practical e-commerce experience that makes our products easy to present and simple to order. The bilingual product pages, mobile-friendly layout, clear pricing, and WhatsApp ordering flow help our customers shop with confidence.",
+    name: "Roufur Rabin",
+    role: "Trusty Client · Bangladesh",
+    project: "Trusty E-Commerce",
+    initials: "RR",
+    featured: true,
+    showLocation: true,
+  },
 ];
 
 export function TestimonialsCarousel() {
@@ -71,93 +84,214 @@ export function TestimonialsCarousel() {
   const reduceMotion = useReducedMotion();
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-  const [currentStory, setCurrentStory] = useState(0);
+  const [isInView, setIsInView] = useState(false);
+  const [isUserPaused, setIsUserPaused] = useState(false);
+  const [isInteractionPaused, setIsInteractionPaused] = useState(false);
+  const resumeTimerRef = useRef<number | null>(null);
+  const isHoveredRef = useRef(false);
+  const isFocusedRef = useRef(false);
+  const loopWidthRef = useRef(0);
 
-  const updateControls = useCallback(() => {
+  const clearResumeTimer = useCallback(() => {
+    if (resumeTimerRef.current !== null) {
+      window.clearTimeout(resumeTimerRef.current);
+      resumeTimerRef.current = null;
+    }
+  }, []);
+
+  const pauseForInteraction = useCallback(() => {
+    clearResumeTimer();
+    setIsInteractionPaused(true);
+  }, [clearResumeTimer]);
+
+  const scheduleAutoResume = useCallback(() => {
+    clearResumeTimer();
+    if (reduceMotion || isUserPaused) return;
+
+    resumeTimerRef.current = window.setTimeout(() => {
+      if (!isHoveredRef.current && !isFocusedRef.current) {
+        setIsInteractionPaused(false);
+      }
+    }, AUTO_RESUME_DELAY);
+  }, [clearResumeTimer, isUserPaused, reduceMotion]);
+
+  const registerManualInteraction = useCallback(() => {
+    pauseForInteraction();
+    scheduleAutoResume();
+  }, [pauseForInteraction, scheduleAutoResume]);
+
+  const updateMeasurements = useCallback(() => {
     const track = trackRef.current;
     if (!track) return;
 
     const card = track.querySelector<HTMLElement>(".testimonial-card");
     if (card) {
       const gap = Number.parseFloat(window.getComputedStyle(track).columnGap) || 16;
-      const nextStory = Math.min(testimonials.length - 1, Math.round(track.scrollLeft / (card.offsetWidth + gap)));
-      setCurrentStory(nextStory);
-      setCanScrollLeft(nextStory > 0);
+      const step = card.offsetWidth + gap;
+      loopWidthRef.current = step * testimonials.length;
+      const canLoop = track.scrollWidth > track.clientWidth + 4;
+      setCanScrollLeft(canLoop);
+      setCanScrollRight(canLoop);
     }
-    setCanScrollRight(track.scrollLeft + track.clientWidth < track.scrollWidth - 4);
   }, []);
 
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
 
-    updateControls();
-    track.addEventListener("scroll", updateControls, { passive: true });
-    const observer = new ResizeObserver(updateControls);
-    observer.observe(track);
+    updateMeasurements();
+    const resizeObserver = new ResizeObserver(updateMeasurements);
+    const visibilityObserver = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { threshold: 0.05 },
+    );
+    resizeObserver.observe(track);
+    visibilityObserver.observe(track);
 
     return () => {
-      track.removeEventListener("scroll", updateControls);
-      observer.disconnect();
+      resizeObserver.disconnect();
+      visibilityObserver.disconnect();
     };
-  }, [updateControls]);
+  }, [updateMeasurements]);
 
-  const scrollStories = (direction: -1 | 1) => {
+  useEffect(() => clearResumeTimer, [clearResumeTimer]);
+
+  useEffect(() => {
+    if (reduceMotion || !isInView || isUserPaused || isInteractionPaused) return;
+
+    let animationFrame = 0;
+    let previousTime = 0;
+    let scrollPosition = trackRef.current?.scrollLeft ?? 0;
+
+    const moveTrack = (time: number) => {
+      const track = trackRef.current;
+      const loopWidth = loopWidthRef.current;
+      if (!track || !loopWidth) {
+        animationFrame = window.requestAnimationFrame(moveTrack);
+        return;
+      }
+
+      if (previousTime) {
+        if (Math.abs(track.scrollLeft - scrollPosition) > 2) {
+          scrollPosition = track.scrollLeft;
+        }
+        const elapsedSeconds = Math.min(time - previousTime, 64) / 1000;
+        scrollPosition += AUTO_SCROLL_SPEED * elapsedSeconds;
+        if (scrollPosition >= loopWidth) scrollPosition -= loopWidth;
+        track.scrollLeft = scrollPosition;
+      }
+      previousTime = time;
+      animationFrame = window.requestAnimationFrame(moveTrack);
+    };
+
+    animationFrame = window.requestAnimationFrame(moveTrack);
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, [isInView, isInteractionPaused, isUserPaused, reduceMotion]);
+
+  const scrollStories = (direction: -1 | 1, manual = true) => {
     const track = trackRef.current;
     const card = track?.querySelector<HTMLElement>(".testimonial-card");
     if (!track || !card) return;
 
+    if (manual) registerManualInteraction();
+
     const gap = Number.parseFloat(window.getComputedStyle(track).columnGap) || 16;
+    const step = card.offsetWidth + gap;
+    if (direction === -1 && track.scrollLeft < step) {
+      track.scrollLeft += loopWidthRef.current;
+    }
     track.scrollBy({
-      left: direction * (card.offsetWidth + gap),
+      left: direction * step,
       behavior: reduceMotion ? "auto" : "smooth",
     });
   };
 
+  const toggleAutoScroll = () => {
+    clearResumeTimer();
+    setIsInteractionPaused(false);
+    setIsUserPaused((paused) => !paused);
+  };
+
   return (
     <div className="testimonial-carousel">
-      <div className="testimonial-track" ref={trackRef} aria-label="Client stories">
-        {testimonials.map((testimonial, index) => (
-          <motion.figure
-            className={`testimonial-card ${testimonial.featured ? "testimonial-featured" : ""}`}
-            key={testimonial.name}
-            initial={reduceMotion ? false : { opacity: 0, x: 24 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, root: trackRef, amount: 0.3 }}
-            transition={{ duration: 0.5, delay: Math.min(index * 0.08, 0.24) }}
-            whileHover={reduceMotion ? undefined : { y: -5 }}
-          >
-            <div className="testimonial-grid-lines" aria-hidden="true"><span /><span /><span /></div>
-            <div className="testimonial-topline">
-              <span className="testimonial-index">{String(index + 1).padStart(2, "0")}</span>
-              {testimonial.project && <span className="testimonial-project">{testimonial.project}</span>}
-              <Quote size={24} />
-            </div>
+      <div
+        className="testimonial-track"
+        ref={trackRef}
+        role="region"
+        aria-label="Client stories"
+        tabIndex={0}
+        onMouseEnter={() => {
+          isHoveredRef.current = true;
+          pauseForInteraction();
+        }}
+        onMouseLeave={() => {
+          isHoveredRef.current = false;
+          scheduleAutoResume();
+        }}
+        onFocus={() => {
+          isFocusedRef.current = true;
+          pauseForInteraction();
+        }}
+        onBlur={() => {
+          isFocusedRef.current = false;
+          scheduleAutoResume();
+        }}
+        onPointerDown={registerManualInteraction}
+        onWheel={registerManualInteraction}
+        onKeyDown={(event) => {
+          if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+          event.preventDefault();
+          scrollStories(event.key === "ArrowLeft" ? -1 : 1);
+        }}
+      >
+        {[0, 1].map((copyIndex) =>
+          testimonials.map((testimonial) => (
+            <motion.figure
+              className={`testimonial-card ${testimonial.featured ? "testimonial-featured" : ""}`}
+              key={`${testimonial.name}-${copyIndex}`}
+              aria-hidden={copyIndex === 1 ? "true" : undefined}
+              initial={false}
+              whileHover={reduceMotion ? undefined : { y: -5 }}
+            >
+              <div className="testimonial-grid-lines" aria-hidden="true"><span /><span /><span /></div>
+              <div className="testimonial-topline">
+                {testimonial.project && <span className="testimonial-project">{testimonial.project}</span>}
+                <Quote size={24} />
+              </div>
 
-            <blockquote>&ldquo;{testimonial.quote}&rdquo;</blockquote>
+              <blockquote>&ldquo;{testimonial.quote}&rdquo;</blockquote>
 
-            <figcaption>
-              <span className="testimonial-avatar" aria-hidden="true">{testimonial.initials}</span>
-              <span className="testimonial-person">
-                <strong>{testimonial.name}</strong>
-                <span className="testimonial-role">
-                  {testimonial.showLocation && <MapPin size={11} />}
-                  {testimonial.role}
+              <figcaption>
+                <span className="testimonial-avatar" aria-hidden="true">{testimonial.initials}</span>
+                <span className="testimonial-person">
+                  <strong>{testimonial.name}</strong>
+                  <span className="testimonial-role">
+                    {testimonial.showLocation && <MapPin size={11} />}
+                    {testimonial.role}
+                  </span>
                 </span>
-              </span>
-              <span className="testimonial-signal" aria-hidden="true"><i /><i /><i /></span>
-            </figcaption>
-          </motion.figure>
-        ))}
+                <span className="testimonial-signal" aria-hidden="true"><i /><i /><i /></span>
+              </figcaption>
+            </motion.figure>
+          )),
+        )}
       </div>
 
       <div className="carousel-footer">
-        <div className="carousel-position" aria-live="polite" aria-atomic="true">
-          <strong>{String(currentStory + 1).padStart(2, "0")}</strong>
-          <span aria-hidden="true" />
-          {String(testimonials.length).padStart(2, "0")}
-        </div>
         <div className="carousel-controls">
+          <button
+            className="testimonial-autoplay-button"
+            type="button"
+            aria-label={isUserPaused ? "Resume automatic client story scrolling" : "Pause automatic client story scrolling"}
+            aria-pressed={isUserPaused}
+            disabled={Boolean(reduceMotion)}
+            data-paused={isUserPaused || isInteractionPaused || Boolean(reduceMotion)}
+            title={reduceMotion ? "Automatic scrolling follows your reduced-motion preference" : isUserPaused ? "Resume automatic scrolling" : "Pause automatic scrolling"}
+            onClick={toggleAutoScroll}
+          >
+            {isUserPaused || reduceMotion ? <Play size={15} /> : <Pause size={15} />}
+            <span aria-hidden="true" />
+          </button>
           <button
             className="testimonial-scroll-button testimonial-scroll-left"
             type="button"
