@@ -54,6 +54,16 @@ const testimonials: Testimonial[] = [
     initials: "HK",
     featured: true,
   },
+  {
+    quote:
+      "Sagor transformed the BounceZip vision into a fast, dependable email verification platform. From real-time and bulk verification to catch-all intelligence and API workflows, he made a technically complex product feel clear, polished, and easy to use.",
+    name: "Nasir Hosain",
+    role: "BounceZip Client · Chittagong, Bangladesh",
+    project: "BounceZip",
+    initials: "NH",
+    featured: true,
+    showLocation: true,
+  },
 ];
 
 export function TestimonialsCarousel() {

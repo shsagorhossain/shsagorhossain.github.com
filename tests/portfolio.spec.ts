@@ -46,13 +46,14 @@ test("animates career metrics to their final values", async ({ page }) => {
   await expect(page.getByText("1500+", { exact: true })).toBeVisible();
 });
 
-test("scrolls through all five featured projects", async ({ page }) => {
+test("scrolls through all six featured projects", async ({ page }) => {
   await page.goto("/");
 
   const track = page.locator(".project-track");
-  await expect(track.locator(".project-card")).toHaveCount(5);
+  await expect(track.locator(".project-card")).toHaveCount(6);
   await expect(track).toContainText("MSL Lab - Staff Operations Platform");
   await expect(track).toContainText("Mohuls - Business Software Ecosystem");
+  await expect(track).toContainText("BounceZip - Email Verification Platform");
   await expect(page.getByRole("button", { name: "Scroll projects left" })).toBeDisabled();
 
   const initialPosition = await track.evaluate((element) => element.scrollLeft);
@@ -64,11 +65,13 @@ test("scrolls through the horizontal client stories", async ({ page }) => {
   await page.goto("/");
 
   const track = page.locator(".testimonial-track");
-  await expect(track.locator(".testimonial-card")).toHaveCount(4);
+  await expect(track.locator(".testimonial-card")).toHaveCount(5);
   await expect(track).toContainText("Safquat");
   await expect(track).toContainText("Mohamed Saad");
   await expect(track).toContainText("Humaun Kabir");
   await expect(track).toContainText("MSL Lab + Mohuls.com");
+  await expect(track).toContainText("Nasir Hosain");
+  await expect(track).toContainText("BounceZip Client · Chittagong, Bangladesh");
   await expect(track).toContainText("CEO, Mohuls Soft Limited");
   await expect(track).toContainText("Personal Cost Management Client · Dubai, UAE");
   await expect(track).toContainText("One Lifestyle BD");
@@ -128,7 +131,7 @@ test("opens and sorts the complete project archive", async ({ page }) => {
   await page.getByRole("link", { name: "View All Projects" }).click();
   await expect(page).toHaveURL(/\/projects\/$/);
   await expect(page.getByRole("heading", { name: "All Projects" })).toBeVisible();
-  await expect(page.locator("main article")).toHaveCount(5);
+  await expect(page.locator("main article")).toHaveCount(6);
   await expect(page.getByRole("link", { name: "View One Lifestyle BD case study" })).toHaveAttribute(
     "href",
     "/projects/one-lifestyle/",
@@ -137,9 +140,13 @@ test("opens and sorts the complete project archive", async ({ page }) => {
     "href",
     "/projects/mohuls/",
   );
+  await expect(page.getByRole("link", { name: "View BounceZip case study" })).toHaveAttribute(
+    "href",
+    "/projects/bouncezip/",
+  );
 
   await page.getByLabel("Sort projects").selectOption("az");
-  await expect(page.locator("main article").first().getByRole("heading")).toContainText("Mohuls - Business Software Ecosystem");
+  await expect(page.locator("main article").first().getByRole("heading")).toContainText("BounceZip - Email Verification Platform");
 
   const sizes = await page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
@@ -199,6 +206,38 @@ test("opens the Mohuls business software ecosystem case study", async ({ page })
 
   await detailPage.getByRole("tab", { name: /Codex Tool/ }).click();
   await expect(detailPage.getByRole("tabpanel")).toContainText("AI-assisted chats");
+
+  const sizes = await detailPage.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+  await detailPage.close();
+});
+
+test("opens the BounceZip email verification case study", async ({ page }) => {
+  await page.goto("/");
+
+  const projectLink = page.getByRole("link", { name: "View BounceZip case study" });
+  await expect(projectLink).toHaveAttribute("href", "/projects/bouncezip/");
+  await projectLink.evaluate((link) => (link as HTMLAnchorElement).click());
+  await expect(page.getByRole("status")).toContainText("Opening case study");
+
+  const detailPage = await page.context().newPage();
+  await detailPage.goto("/projects/bouncezip/");
+  await expect(detailPage).toHaveURL(/\/projects\/bouncezip\/$/);
+  await expect(detailPage.getByRole("heading", { name: "BounceZip", exact: true })).toBeVisible();
+  await expect(detailPage.getByText("Email Verification Platform", { exact: true })).toBeVisible();
+  await expect(detailPage.getByAltText("BounceZip live homepage with a real-time email verification console").first()).toBeVisible();
+  await expect(detailPage.locator("main img")).toHaveCount(5);
+
+  const liveProduct = detailPage.getByRole("link", { name: "Visit Live Product" }).first();
+  await expect(liveProduct).toHaveAttribute("href", "https://bouncezip.com");
+  await expect(liveProduct).toHaveAttribute("target", "_blank");
+
+  await detailPage.getByRole("tab", { name: /Catch-all/ }).click();
+  await expect(detailPage.getByRole("tabpanel")).toContainText("Accept-all detected");
+  await expect(detailPage.getByRole("tabpanel")).toContainText("Send with caution");
 
   const sizes = await detailPage.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
