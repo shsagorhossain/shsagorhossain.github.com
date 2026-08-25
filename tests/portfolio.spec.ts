@@ -67,23 +67,138 @@ test("scrolls through all six featured projects", async ({ page }) => {
   await expect.poll(() => track.evaluate((element) => element.scrollLeft)).toBeGreaterThan(initialPosition);
 });
 
-test("shows insight categories and opens the featured article", async ({ page }) => {
+test("shows one featured insight and supports manual carousel navigation", async ({ page }) => {
   await page.goto("/");
 
   const insightsSection = page.locator("#insights");
+  const carousel = insightsSection.getByRole("region", { name: "Featured insights" });
+  const activeCard = carousel.locator(".insight-feature-card");
   await expect(insightsSection.getByRole("heading", { name: "Insights", exact: true })).toBeVisible();
   await expect(insightsSection.locator(".insight-category-list li")).toHaveCount(10);
+  await expect(insightsSection.locator(".insight-category-icon svg")).toHaveCount(10);
+  await expect(activeCard).toHaveCount(1);
   await expect(insightsSection).toContainText("Software Engineering");
-  await expect(insightsSection.getByRole("heading", { name: "Building Production-Ready Software Beyond the Happy Path" })).toBeVisible();
+  await expect(insightsSection).toContainText("4 Published");
+  await expect(carousel.locator(".insight-carousel-pages button")).toHaveCount(4);
+  await expect(carousel.locator(".insight-carousel-count")).toHaveCount(0);
+  await expect(carousel.getByRole("button", { name: "Show previous insight" })).toBeVisible();
+  await expect(carousel.getByRole("button", { name: "Show next insight" })).toBeVisible();
+  await expect(carousel.getByRole("button", { name: "Pause insight rotation" })).toBeVisible();
+  await expect(carousel.getByRole("button", { name: /Enter the Insight Index/ })).toBeDisabled();
 
-  await insightsSection.getByRole("button", { name: "Read Insight" }).click();
-  const reader = page.getByRole("dialog", { name: "Building Production-Ready Software Beyond the Happy Path" });
-  await expect(reader).toBeVisible();
-  await expect(reader).toContainText("A compact production-readiness checklist");
-  await expect(reader.getByRole("listitem")).toHaveCount(6);
+  await page.waitForTimeout(150);
+  const initialSlug = await carousel.getAttribute("data-active-insight");
+  const initialTurnSide = await carousel.getAttribute("data-turn-side");
+  expect(initialSlug).toBeTruthy();
+  expect(initialTurnSide).toBeTruthy();
 
-  await reader.getByRole("button", { name: "Close insight" }).click();
-  await expect(reader).toBeHidden();
+  await carousel.getByRole("button", { name: "Show next insight" }).click();
+  await expect(carousel).not.toHaveAttribute("data-active-insight", initialSlug!);
+  await expect(carousel).not.toHaveAttribute("data-turn-side", initialTurnSide!);
+  await expect(activeCard).toHaveCount(1);
+  const nextTurnSide = await carousel.getAttribute("data-turn-side");
+  await carousel.getByRole("button", { name: "Show previous insight" }).click();
+  await expect(carousel).toHaveAttribute("data-active-insight", initialSlug!);
+  await expect(carousel).not.toHaveAttribute("data-turn-side", nextTurnSide!);
+  await expect(activeCard).toHaveCount(1);
+
+  const activeTitle = (await carousel.locator(".insight-feature-copy h3").textContent())?.trim();
+  const articleLink = carousel.getByRole("link", { name: "Read Insight", exact: true });
+  const articlePath = await articleLink.getAttribute("href");
+  expect(activeTitle).toBeTruthy();
+  expect(articlePath).toBeTruthy();
+
+  await Promise.all([
+    page.waitForURL((url) => url.pathname === articlePath, { timeout: 15000 }),
+    articleLink.click(),
+  ]);
+  await expect(page.getByRole("heading", { name: activeTitle!, level: 1 })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Article contents" })).toBeVisible();
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("automatically rotates featured insights and can be paused", async ({ page }) => {
+  await page.goto("/");
+
+  const carousel = page.getByRole("region", { name: "Featured insights" });
+  await carousel.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(200);
+
+  const initialSlug = await carousel.getAttribute("data-active-insight");
+  await expect.poll(() => carousel.getAttribute("data-active-insight"), { timeout: 5000 }).not.toBe(initialSlug);
+
+  await carousel.getByRole("button", { name: "Pause insight rotation" }).click();
+  await expect(carousel.getByRole("button", { name: "Play insight rotation" })).toBeVisible();
+  const pausedSlug = await carousel.getAttribute("data-active-insight");
+  await page.waitForTimeout(3300);
+  await expect(carousel).toHaveAttribute("data-active-insight", pausedSlug!);
+});
+
+test("opens the modular monolith insight", async ({ page }) => {
+  await page.goto("/insights/designing-a-modular-monolith-that-can-grow-with-your-product/");
+
+  await expect(page.getByRole("heading", { name: "Designing a Modular Monolith That Can Grow with Your Product", level: 1 })).toBeVisible();
+  await expect(page.getByText("10 min read", { exact: true })).toBeVisible();
+  await expect(page.getByAltText(/unified architectural model assembled from distinct connected modules/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Extract a service only when the evidence is clear" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A practical modularity review" })).toBeVisible();
+  await expect(page.getByAltText("A unified software architecture divided into six distinct business modules connected through narrow contracts")).toBeVisible();
+  await expect(page.getByAltText("A well-bounded module moving from a unified architecture into an independently operated service through a controlled connection")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(7);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the idempotent APIs insight", async ({ page }) => {
+  await page.goto("/insights/building-idempotent-apis-for-payments-webhooks-and-automation/");
+
+  await expect(page.getByRole("heading", { name: "Building Idempotent APIs for Payments, Webhooks, and Automation", level: 1 })).toBeVisible();
+  await expect(page.getByText("May 14, 2026")).toBeVisible();
+  await expect(page.getByText("10 min read")).toBeVisible();
+  await expect(page.getByAltText("Repeated request capsules passing through one precision gateway to produce a single recorded outcome")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Make the first write atomic" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "An idempotency review before release" })).toBeVisible();
+  await expect(page.getByAltText("A request token being registered with a durable key before an identical retry receives the preserved result")).toBeVisible();
+  await expect(page.getByAltText("Two concurrent request capsules meeting one transaction lock that protects a single committed result")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(8);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the reliable background jobs insight", async ({ page }) => {
+  await page.goto("/insights/designing-reliable-background-jobs-with-retries-and-dead-letter-queues/");
+
+  await expect(page.getByRole("heading", { name: "Designing Reliable Background Jobs with Retries and Dead-Letter Queues", level: 1 })).toBeVisible();
+  await expect(page.getByText("February 7, 2026")).toBeVisible();
+  await expect(page.getByText("11 min read")).toBeVisible();
+  await expect(page.getByAltText("Handmade paper collage showing jobs moving through workers, retrying, and entering a recovery queue")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Use backoff as traffic control" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Treat the dead-letter queue as a workspace" })).toBeVisible();
+  await expect(page.getByAltText("Hand-drawn notebook timeline showing failed job attempts separated by increasing waits before recovery")).toBeVisible();
+  await expect(page.getByAltText("Hand-printed workflow showing a damaged job isolated, inspected, repaired, and returned to successful processing")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(8);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(10);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
 });
 
 test("scrolls through the horizontal client stories", async ({ page }) => {

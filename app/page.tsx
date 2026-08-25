@@ -10,6 +10,7 @@ import { ServicesNetwork } from "@/components/services-network";
 import { ProjectsCarousel } from "@/components/projects-carousel";
 import { TestimonialsCarousel } from "@/components/testimonials-carousel";
 import { InsightsShowcase } from "@/components/insights-showcase";
+import { insightCategories, insights } from "@/data/insights";
 import {
   HomeContactBanner,
   HomeHero,
@@ -57,7 +58,9 @@ export default function Home() {
                 <p>Ideas in Practice</p>
                 <h2>Insights</h2>
               </div>
-              <span className="insights-heading-meta">10 Editorial Categories · 1 Published</span>
+              <span className="insights-heading-meta">
+                {insightCategories.length} Editorial Categories · {insights.length} Published
+              </span>
             </HomeReveal>
             <InsightsShowcase />
           </div>

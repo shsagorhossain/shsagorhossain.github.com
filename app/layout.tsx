@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://shsagorhossain.github.io"),
   title: "Sagor Hossain | Full Stack Developer",
   description:
     "Portfolio of Sagor Hossain, a full stack developer building modern, scalable web applications.",
