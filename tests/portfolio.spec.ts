@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Route } from "@playwright/test";
 
 test("renders the portfolio without horizontal overflow", async ({ page }) => {
   await page.goto("/");
@@ -29,6 +29,62 @@ test("opens and follows the mobile navigation", async ({ page }, testInfo) => {
   await expect(page.getByRole("navigation", { name: "Primary navigation" })).toBeVisible();
   await page.getByRole("link", { name: "Services", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Services That I Provide" })).toBeInViewport();
+});
+
+test("keeps homepage anchor destinations clear of the fixed header", async ({ page }, testInfo) => {
+  await page.goto("/");
+
+  const useNavigationLink = async (label: string) => {
+    if (testInfo.project.name === "mobile") {
+      await page.getByRole("button", { name: "Open navigation" }).click();
+      await page.getByRole("navigation", { name: "Primary navigation" }).last().getByRole("link", { name: new RegExp(label) }).click();
+      return;
+    }
+
+    await page.locator(".nav-links").getByRole("link", { name: label, exact: true }).click();
+  };
+
+  await useNavigationLink("Projects");
+  await expect(page).toHaveURL(/#projects$/);
+  await page.waitForTimeout(850);
+
+  const projectPosition = await page.evaluate(() => ({
+    targetTop: document.querySelector("#projects")?.getBoundingClientRect().top ?? -1,
+    headerBottom: document.querySelector(".site-header")?.getBoundingClientRect().bottom ?? 0,
+  }));
+  expect(projectPosition.targetTop).toBeGreaterThanOrEqual(projectPosition.headerBottom + 12);
+
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThanOrEqual(1);
+
+  const homePosition = await page.evaluate(() => ({
+    contentTop: document.querySelector(".hero-copy")?.getBoundingClientRect().top ?? -1,
+    headerBottom: document.querySelector(".site-header")?.getBoundingClientRect().bottom ?? 0,
+  }));
+  expect(homePosition.contentTop).toBeGreaterThanOrEqual(homePosition.headerBottom);
+
+  await useNavigationLink("Skills");
+  await expect(page).toHaveURL(/#skills$/);
+  await page.waitForTimeout(850);
+
+  const skillsPosition = await page.evaluate(() => ({
+    targetTop: document.querySelector("#skills")?.getBoundingClientRect().top ?? -1,
+    headerBottom: document.querySelector(".site-header")?.getBoundingClientRect().bottom ?? 0,
+    heroScrollTop: document.querySelector("#home")?.scrollTop ?? -1,
+  }));
+  expect(skillsPosition.targetTop).toBeGreaterThanOrEqual(skillsPosition.headerBottom + 12);
+  expect(skillsPosition.heroScrollTop).toBe(0);
+
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThanOrEqual(1);
+
+  const restoredPosition = await page.evaluate(() => ({
+    contentTop: document.querySelector(".hero-copy")?.getBoundingClientRect().top ?? -1,
+    headerBottom: document.querySelector(".site-header")?.getBoundingClientRect().bottom ?? 0,
+    heroScrollTop: document.querySelector("#home")?.scrollTop ?? -1,
+  }));
+  expect(restoredPosition.contentTop).toBeGreaterThanOrEqual(restoredPosition.headerBottom);
+  expect(restoredPosition.heroScrollTop).toBe(0);
 });
 
 test("updates the service console from a network node", async ({ page }) => {
@@ -84,7 +140,13 @@ test("shows one featured insight and supports manual carousel navigation", async
   await expect(carousel.getByRole("button", { name: "Show previous insight" })).toBeVisible();
   await expect(carousel.getByRole("button", { name: "Show next insight" })).toBeVisible();
   await expect(carousel.getByRole("button", { name: "Pause insight rotation" })).toBeVisible();
-  await expect(carousel.getByRole("button", { name: /Enter the Insight Index/ })).toBeDisabled();
+  await expect(carousel.getByRole("link", { name: "Enter the Insight Index" })).toHaveAttribute("href", "/insights/");
+
+  const activeCover = activeCard.locator(".insight-cover");
+  const imageSkeleton = activeCover.locator('[data-image-skeleton="home-insight"]');
+  await expect(imageSkeleton).toHaveCount(1);
+  await expect(imageSkeleton).toHaveAttribute("data-loaded", "true");
+  await expect(activeCover.locator(".insight-cover-image")).toHaveClass(/is-loaded/);
 
   await page.waitForTimeout(150);
   const initialSlug = await carousel.getAttribute("data-active-insight");
@@ -122,6 +184,44 @@ test("shows one featured insight and supports manual carousel navigation", async
   expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
 });
 
+test("keeps the homepage insight skeleton visible until its image loads", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+
+  const heldImageRoutes: Route[] = [];
+  let holdInsightImages = true;
+  await page.route(
+    (url) => url.pathname.startsWith("/insights/") && url.pathname.endsWith(".webp"),
+    async (route) => {
+      if (holdInsightImages) {
+        heldImageRoutes.push(route);
+        return;
+      }
+
+      await route.continue();
+    },
+  );
+
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(250);
+
+  await expect(page.locator("#insights")).toBeAttached();
+  await page.evaluate(() => document.querySelector("#insights")?.scrollIntoView({ block: "center" }));
+  const carousel = page.getByRole("region", { name: "Featured insights" });
+  const activeCard = carousel.locator(".insight-feature-card");
+  await expect(activeCard).toHaveCount(1);
+  await expect.poll(() => heldImageRoutes.length).toBeGreaterThan(0);
+
+  const skeleton = activeCard.locator('[data-image-skeleton="home-insight"]');
+  await expect(skeleton).toBeVisible();
+  await expect(skeleton).toHaveAttribute("data-loaded", "false");
+
+  holdInsightImages = false;
+  await Promise.allSettled(heldImageRoutes.map((route) => route.continue()));
+
+  await expect(skeleton).toHaveAttribute("data-loaded", "true");
+  await expect(activeCard.locator(".insight-cover-image")).toHaveClass(/is-loaded/);
+});
+
 test("automatically rotates featured insights and can be paused", async ({ page }) => {
   await page.goto("/");
 
@@ -137,6 +237,93 @@ test("automatically rotates featured insights and can be paused", async ({ page 
   const pausedSlug = await carousel.getAttribute("data-active-insight");
   await page.waitForTimeout(3300);
   await expect(carousel).toHaveAttribute("data-active-insight", pausedSlug!);
+});
+
+test("browses, filters, and opens the dedicated Insights Index", async ({ page }) => {
+  await page.goto("/insights/");
+
+  await expect(page.getByRole("heading", { name: "Insights Index", level: 1 })).toBeVisible();
+  const spotlight = page.locator("[data-spotlight-insight]");
+  await expect(spotlight).toHaveAttribute("data-spotlight-ready", "true");
+  const firstSpotlight = await spotlight.getAttribute("data-spotlight-insight");
+  expect(firstSpotlight).toBeTruthy();
+  await page.reload();
+  await expect(spotlight).toHaveAttribute("data-spotlight-ready", "true");
+  await expect(spotlight).not.toHaveAttribute("data-spotlight-insight", firstSpotlight!);
+  await expect(page.getByText("4", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("complementary", { name: "Filter insights by category" }).getByRole("button")).toHaveCount(11);
+
+  const indexPanel = page.locator("[data-view-mode]");
+  const articles = page.locator("main article");
+  await expect(indexPanel).toHaveAttribute("data-result-count", "4");
+  await expect(articles).toHaveCount(4);
+  const readActions = articles.getByRole("link", { name: "Read Insight", exact: true });
+  await expect(readActions).toHaveCount(4);
+  const actionWidthRatios = await readActions.evaluateAll((links) => links.map((link) => {
+    const footer = link.closest("footer");
+    return footer ? link.getBoundingClientRect().width / footer.getBoundingClientRect().width : 0;
+  }));
+  expect(actionWidthRatios.every((ratio) => ratio > 0.98)).toBe(true);
+
+  await page.getByRole("searchbox", { name: "Search insights" }).fill("idempotent");
+  await expect(indexPanel).toHaveAttribute("data-result-count", "1");
+  await expect(articles).toHaveCount(1);
+  await expect(articles.getByRole("heading", { name: "Building Idempotent APIs for Payments, Webhooks, and Automation" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Clear insight search" }).click();
+  await page.getByRole("button", { name: /DevOps & Cloud/ }).click();
+  await expect(indexPanel).toHaveAttribute("data-result-count", "0");
+  await expect(articles).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "No notes found in this lane" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Reset index" }).last().click();
+  await expect(indexPanel).toHaveAttribute("data-result-count", "4");
+  await page.getByRole("button", { name: "List view" }).click();
+  await expect(indexPanel).toHaveAttribute("data-view-mode", "list");
+
+  const firstArticle = articles.first();
+  const firstTitle = (await firstArticle.getByRole("heading", { level: 3 }).textContent())?.trim();
+  expect(firstTitle).toBeTruthy();
+  const firstTitleLink = firstArticle.getByRole("heading", { level: 3 }).getByRole("link");
+  const destination = await firstTitleLink.getAttribute("href");
+  expect(destination).toBeTruthy();
+
+  const navigation = page.waitForURL((url) => url.pathname === destination, { timeout: 15000 });
+  await firstTitleLink.click();
+  await navigation;
+  await expect(page.getByRole("heading", { name: firstTitle!, level: 1 })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Back to insights" }).first()).toHaveAttribute("href", "/insights/");
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("shows the live Insights skeleton until artwork finishes loading", async ({ page }) => {
+  let releaseImages: () => void = () => undefined;
+  const imageGate = new Promise<void>((resolve) => {
+    releaseImages = resolve;
+  });
+
+  await page.route("**/insights/*.webp", async (route) => {
+    await imageGate;
+    await route.continue();
+  });
+
+  await page.goto("/insights/", { waitUntil: "domcontentloaded" });
+  const spotlightSkeleton = page.locator('[data-image-skeleton="spotlight"]');
+  await expect(spotlightSkeleton).toBeVisible();
+  await expect(spotlightSkeleton).toHaveAttribute("data-loaded", "false");
+
+  releaseImages();
+  await expect(spotlightSkeleton).toHaveAttribute("data-loaded", "true", { timeout: 10000 });
+  await expect(spotlightSkeleton).toBeHidden();
+
+  await page.locator("#library").scrollIntoViewIfNeeded();
+  const cardSkeleton = page.locator('[data-image-skeleton="card"]').first();
+  await expect(cardSkeleton).toHaveAttribute("data-loaded", "true", { timeout: 10000 });
 });
 
 test("opens the modular monolith insight", async ({ page }) => {

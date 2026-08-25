@@ -90,7 +90,7 @@ export function InsightArticleExperience({ insight }: { insight: InsightPost }) 
             <Image src="/sh-logo.webp" alt="" width={72} height={48} priority />
           </Link>
           <nav aria-label="Insight navigation">
-            <Link href="/#insights"><ArrowLeft size={16} />Back to insights</Link>
+            <Link href="/insights/"><ArrowLeft size={16} />Back to insights</Link>
             <a href="mailto:shsagor.11s@gmail.com"><Mail size={16} />Let&apos;s talk</a>
           </nav>
         </div>
@@ -224,7 +224,7 @@ export function InsightArticleExperience({ insight }: { insight: InsightPost }) 
         <div className={styles.shell}>
           <Image src="/sh-logo.webp" alt="" width={64} height={43} />
           <p>Engineering insights by Sagor Hossain.</p>
-          <Link href="/#insights">Back to insights</Link>
+          <Link href="/insights/">Back to insights</Link>
         </div>
       </footer>
     </div>

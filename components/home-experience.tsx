@@ -158,7 +158,7 @@ export function HomeHero() {
               Download CV
             </motion.a>
           </motion.div>
-          <motion.div className="skills-block" id="skills" variants={{ hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0 } }}>
+          <motion.div className="skills-block" id="skills" variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }}>
             <p>Tech Stack</p>
             <div className="tech-list" aria-label="Technology stack">
               {technologies.map((technology, index) => {
@@ -276,8 +276,8 @@ export function HomeSection({ children, className, id }: { children: ReactNode; 
     <motion.section
       className={className}
       id={id}
-      initial={reduceMotion ? false : { opacity: 0, y: 34 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={reduceMotion ? false : { opacity: 0 }}
+      whileInView={{ opacity: 1 }}
       viewport={{ once: true, margin: "-6% 0px -6% 0px" }}
       transition={{ duration: 0.68, ease: "easeOut" }}
     >
@@ -309,8 +309,8 @@ export function HomeContactBanner() {
     <motion.section
       className="contact-banner contact-banner-live site-shell"
       id="contact"
-      initial={reduceMotion ? false : { opacity: 0, y: 34 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={reduceMotion ? false : { opacity: 0 }}
+      whileInView={{ opacity: 1 }}
       viewport={{ once: true, margin: "-10%" }}
       transition={{ duration: 0.68 }}
     >

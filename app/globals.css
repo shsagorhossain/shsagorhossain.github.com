@@ -183,7 +183,7 @@ button {
 
 .hero {
   position: relative;
-  overflow: hidden;
+  overflow: clip;
   padding-top: 62px;
 }
 
@@ -1540,12 +1540,60 @@ p {
   background: linear-gradient(90deg, transparent 52%, rgba(8, 17, 31, 0.86)), linear-gradient(0deg, rgba(2, 7, 15, 0.58), transparent 48%);
 }
 
-.insight-cover img {
+.insight-cover-image {
+  opacity: 0;
   object-fit: cover;
-  transition: transform 600ms ease, filter 260ms ease;
+  transition: opacity 420ms ease, transform 600ms ease, filter 260ms ease;
 }
 
-.insight-feature-card:hover .insight-cover img {
+.insight-cover-image.is-loaded { opacity: 1; }
+
+.insight-cover-skeleton {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0 24px 54px;
+  background:
+    linear-gradient(145deg, rgba(25, 43, 69, 0.96), rgba(8, 21, 38, 0.98)),
+    #101c2d;
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity 360ms ease, visibility 360ms ease;
+}
+
+.insight-cover-skeleton::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(105deg, transparent 25%, rgba(126, 157, 207, 0.1) 44%, rgba(164, 190, 231, 0.2) 50%, rgba(126, 157, 207, 0.1) 56%, transparent 75%);
+  transform: translateX(-105%);
+  animation: insight-skeleton-sweep 1.65s ease-in-out infinite;
+}
+
+.insight-cover-skeleton i {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 38%;
+  height: 7px;
+  border-radius: 3px;
+  background: rgba(126, 151, 191, 0.14);
+}
+
+.insight-cover-skeleton i:first-child { width: 62%; height: 11px; }
+.insight-cover-skeleton i:last-child { width: 24%; }
+
+.insight-cover-skeleton[data-loaded="true"] {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.insight-feature-card:hover .insight-cover-image {
   filter: saturate(1.08) contrast(1.03);
   transform: scale(1.025);
 }
@@ -1800,8 +1848,10 @@ p {
   border-radius: 7px;
   color: #aebbd0;
   background: rgba(11, 24, 43, 0.86);
+  cursor: pointer;
   font-size: 10px;
   font-weight: 750;
+  transition: color 180ms ease, border-color 180ms ease, background 180ms ease, transform 180ms ease;
 }
 
 .insight-carousel-toolbar .insight-index-button {
@@ -1815,8 +1865,18 @@ p {
   cursor: default;
 }
 
+.insight-index-button:hover,
+.insight-index-button:focus-visible {
+  border-color: rgba(104, 156, 255, 0.64);
+  color: white;
+  background: #1a3156;
+  outline: none;
+  transform: translateY(-1px);
+}
+
 .insight-index-button svg:first-child { color: #78a3ff; }
 .insight-index-button svg:last-child { color: #64748d; }
+.insight-index-button:hover svg:last-child { color: #9bb8fa; }
 
 @keyframes insight-signal-line {
   0%, 100% { opacity: 0.18; transform: translateX(-5%) rotate(-18deg); }
@@ -1826,6 +1886,11 @@ p {
 @keyframes insight-bar {
   0%, 100% { opacity: 0.38; transform: scaleY(0.6); }
   50% { opacity: 1; transform: scaleY(1); }
+}
+
+@keyframes insight-skeleton-sweep {
+  0% { transform: translateX(-105%); }
+  60%, 100% { transform: translateX(105%); }
 }
 
 .contact-banner {
@@ -3243,6 +3308,7 @@ footer {
   .contact-banner-live .contact-path svg,
   .insight-cover-grid span,
   .insight-cover-signal i,
+  .insight-cover-skeleton::after,
   .hero-live .hero-role span {
     animation: none !important;
   }

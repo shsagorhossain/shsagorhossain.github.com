@@ -5,26 +5,17 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowUpRight,
-  AppWindow,
-  Bot,
   BookOpen,
-  Braces,
   CalendarDays,
   ChevronsLeft,
   ChevronsRight,
   Clock3,
-  CloudCog,
-  DatabaseZap,
-  FolderKanban,
-  GraduationCap,
   LibraryBig,
-  PanelsTopLeft,
   Pause,
   Play,
-  ServerCog,
-  ShieldCheck,
 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { insightCategoryIcons } from "@/components/insight-category-icons";
 import {
   getInsightCategory,
   insightCategories,
@@ -35,18 +26,6 @@ const featuredInsights = insights.filter((insight) => insight.featured);
 const publishedCategoryIds = new Set(featuredInsights.map((insight) => insight.categoryId));
 const AUTO_ROTATE_DELAY = 3000;
 const CUBE_TURN_SIDES = ["right", "bottom", "left", "top"] as const;
-const categoryIcons = {
-  "software-engineering": Braces,
-  "frontend-development": PanelsTopLeft,
-  "backend-development": ServerCog,
-  "ai-automation": Bot,
-  "saas-development": AppWindow,
-  "devops-cloud": CloudCog,
-  "databases-performance": DatabaseZap,
-  "security-reliability": ShieldCheck,
-  "project-case-studies": FolderKanban,
-  "engineering-lessons": GraduationCap,
-} as const;
 
 type CubeTurnSide = (typeof CUBE_TURN_SIDES)[number];
 
@@ -105,6 +84,7 @@ function formatDate(date: string) {
 export function InsightsShowcase() {
   const reduceMotion = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(() => new Set());
   const [turnSide, setTurnSide] = useState<CubeTurnSide>("right");
   const [autoPlay, setAutoPlay] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
@@ -114,6 +94,16 @@ export function InsightsShowcase() {
   const activeInsight = featuredInsights[activeIndex] ?? featuredInsights[0];
   const category = activeInsight ? getInsightCategory(activeInsight.categoryId) : undefined;
   const shouldAutoRotate = autoPlay && !reduceMotion && !isHovered && !hasFocus;
+
+  const markImageLoaded = useCallback((slug: string) => {
+    setLoadedImages((current) => {
+      if (current.has(slug)) return current;
+
+      const next = new Set(current);
+      next.add(slug);
+      return next;
+    });
+  }, []);
 
   const queueCubeTurn = useCallback(() => {
     const nextSide = CUBE_TURN_SIDES[turnCursor.current % CUBE_TURN_SIDES.length];
@@ -167,6 +157,8 @@ export function InsightsShowcase() {
 
   if (!activeInsight) return null;
 
+  const activeImageLoaded = loadedImages.has(activeInsight.slug);
+
   return (
     <div>
       <motion.ul
@@ -178,7 +170,7 @@ export function InsightsShowcase() {
         variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.035 } } }}
       >
         {insightCategories.map((category) => {
-          const CategoryIcon = categoryIcons[category.id];
+          const CategoryIcon = insightCategoryIcons[category.id];
 
           return (
             <motion.li
@@ -240,16 +232,15 @@ export function InsightsShowcase() {
             ))}
           </div>
 
-          <button
+          <Link
             className="insight-index-button"
-            type="button"
-            disabled
-            aria-label="Enter the Insight Index, coming soon"
+            href="/insights/"
+            aria-label="Enter the Insight Index"
           >
             <LibraryBig size={16} />
             Enter the Insight Index
             <ArrowUpRight size={15} />
-          </button>
+          </Link>
         </div>
 
         <div
@@ -274,7 +265,25 @@ export function InsightsShowcase() {
               >
                 <div className="insight-cover-shell">
                   <Link className="insight-cover" href={`/insights/${activeInsight.slug}/`} aria-label={`Read ${activeInsight.title}`}>
-                    <Image src={activeInsight.image} alt={activeInsight.imageAlt} fill sizes="(max-width: 820px) 90vw, 45vw" />
+                    <Image
+                      className={`insight-cover-image${activeImageLoaded ? " is-loaded" : ""}`}
+                      src={activeInsight.image}
+                      alt={activeInsight.imageAlt}
+                      fill
+                      sizes="(max-width: 820px) 90vw, 45vw"
+                      onLoad={() => markImageLoaded(activeInsight.slug)}
+                      onError={() => markImageLoaded(activeInsight.slug)}
+                    />
+                    <span
+                      className="insight-cover-skeleton"
+                      data-loaded={activeImageLoaded}
+                      data-image-skeleton="home-insight"
+                      aria-hidden="true"
+                    >
+                      <i />
+                      <i />
+                      <i />
+                    </span>
                     <div className="insight-cover-grid" aria-hidden="true"><span /><span /><span /></div>
                     <span className="insight-feature-label"><BookOpen size={14} />Featured Insight</span>
                     <span className="insight-cover-signal" aria-hidden="true"><i /><i /><i /></span>

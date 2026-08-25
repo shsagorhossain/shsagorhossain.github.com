@@ -1,0 +1,242 @@
+.page {
+  min-height: 100vh;
+  overflow: hidden;
+  background: #040914;
+}
+
+.shell {
+  width: 90%;
+  max-width: 1440px;
+  margin-inline: auto;
+}
+
+.skeleton {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #101c2d;
+}
+
+.skeleton::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(105deg, transparent 25%, rgba(123, 151, 199, 0.11) 44%, rgba(157, 182, 223, 0.2) 50%, rgba(123, 151, 199, 0.11) 56%, transparent 75%);
+  transform: translateX(-105%);
+  animation: sweep 1.65s ease-in-out infinite;
+}
+
+.header {
+  border-bottom: 1px solid rgba(104, 133, 181, 0.14);
+  background: #030812;
+}
+
+.header > div {
+  display: flex;
+  align-items: center;
+  min-height: 66px;
+}
+
+.logo { width: 72px; height: 42px; margin-right: auto; }
+
+.header nav {
+  display: flex;
+  gap: 28px;
+  margin-right: 30px;
+}
+
+.header nav span { width: 58px; height: 12px; }
+.headerAction { width: 104px; height: 39px; }
+
+.hero {
+  position: relative;
+  min-height: 610px;
+  margin-top: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(100, 137, 201, 0.2);
+  border-radius: 8px;
+  background: #091524;
+}
+
+.hero::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(115deg, rgba(21, 38, 63, 0.44), transparent 62%);
+}
+
+.heroCopy {
+  position: relative;
+  z-index: 2;
+  width: 66%;
+  padding: 62px 0 62px 58px;
+}
+
+.eyebrow { width: 184px; height: 30px; margin-bottom: 25px; }
+.heroTitle { width: min(570px, 88%); height: 68px; margin-bottom: 24px; }
+.heroLine { width: min(570px, 88%); height: 13px; margin-bottom: 11px; }
+.heroLineShort { width: min(390px, 62%); height: 13px; }
+
+.storyBlock {
+  margin-top: 34px;
+  padding-left: 18px;
+  border-left: 2px solid #315da9;
+}
+
+.storyLabel { width: 112px; height: 10px; margin-bottom: 12px; }
+.storyTitle { width: min(570px, 92%); height: 25px; margin-bottom: 9px; }
+.storyTitleShort { width: min(410px, 70%); height: 25px; margin-bottom: 15px; }
+.storyMeta { width: 278px; height: 10px; }
+
+.heroActions { display: flex; gap: 10px; margin-top: 29px; }
+.heroActions span { width: 150px; height: 43px; }
+
+.heroMetrics {
+  position: absolute;
+  top: 25px;
+  right: 25px;
+  z-index: 2;
+  display: grid;
+  width: 178px;
+  padding: 11px;
+  border: 1px solid rgba(107, 143, 208, 0.18);
+  border-radius: 7px;
+  background: rgba(5, 14, 27, 0.72);
+}
+
+.heroMetrics span { height: 36px; margin-block: 4px; }
+
+.library { padding-top: 96px; padding-bottom: 84px; }
+
+.libraryHeading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.headingLabel { width: 112px; height: 10px; margin-bottom: 11px; }
+.headingTitle { width: 410px; height: 44px; }
+.headingCopy { width: 420px; height: 11px; margin-bottom: 9px; }
+.headingCopyShort { width: 300px; height: 11px; margin-left: auto; }
+
+.workspace {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+
+.categoryRail {
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+  border: 1px solid rgba(97, 128, 184, 0.18);
+  border-radius: 8px;
+  background: #091423;
+}
+
+.railHeading { height: 30px; margin-bottom: 4px; }
+.categoryRow { height: 41px; }
+.indexPanel { min-width: 0; }
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) 160px 76px;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid rgba(98, 128, 181, 0.18);
+  border-radius: 8px;
+  background: #091423;
+}
+
+.search,
+.sort,
+.view { height: 40px; }
+.resultLine { width: 94px; height: 9px; margin: 20px 3px 18px; }
+
+.articleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.articleCard {
+  overflow: hidden;
+  min-width: 0;
+  padding: 7px;
+  border: 1px solid rgba(97, 128, 184, 0.2);
+  border-radius: 8px;
+  background: #091423;
+}
+
+.cardMedia { width: 100%; aspect-ratio: 16 / 9; }
+.articleCard > div { padding: 17px 13px 11px; }
+.cardMeta { width: 130px; height: 9px; margin-bottom: 16px; }
+.cardTitle { width: 100%; height: 21px; margin-bottom: 8px; }
+.cardTitleShort { width: 76%; height: 21px; margin-bottom: 18px; }
+.cardCopy { width: 100%; height: 10px; margin-bottom: 8px; }
+.cardCopyShort { width: 88%; height: 10px; margin-bottom: 30px; }
+.cardFooter { width: 100%; height: 42px; }
+
+.srOnly {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+@keyframes sweep {
+  0% { transform: translateX(-105%); }
+  60%, 100% { transform: translateX(105%); }
+}
+
+@media (max-width: 1180px) {
+  .workspace { grid-template-columns: 230px minmax(0, 1fr); }
+  .articleGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 850px) {
+  .header nav { display: none; }
+  .headerAction { width: 140px; }
+  .heroCopy { width: 76%; padding-left: 35px; }
+  .workspace { grid-template-columns: 1fr; }
+  .categoryRail { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .railHeading { grid-column: 1 / -1; }
+  .articleGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .header > div { min-height: 60px; }
+  .logo { width: 64px; height: 38px; }
+  .headerAction { width: 145px; height: 39px; }
+  .hero { min-height: 720px; margin-top: 14px; }
+  .heroCopy { width: auto; padding: 102px 21px 28px; }
+  .heroMetrics { top: 14px; right: 14px; left: 14px; grid-template-columns: repeat(3, 1fr); width: auto; }
+  .heroMetrics span { height: 46px; margin: 3px; }
+  .heroTitle { width: 90%; height: 90px; }
+  .storyTitle,
+  .storyTitleShort { height: 23px; }
+  .heroActions { display: grid; }
+  .heroActions span { width: 100%; }
+  .library { padding-top: 70px; }
+  .libraryHeading { align-items: flex-start; flex-direction: column; gap: 18px; }
+  .headingTitle { width: min(340px, 95%); height: 74px; }
+  .headingCopy { width: min(340px, 95%); }
+  .headingCopyShort { width: 78%; margin-left: 0; }
+  .categoryRail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .toolbar { grid-template-columns: minmax(0, 1fr) 76px; }
+  .search { grid-column: 1 / -1; }
+  .sort { width: 100%; }
+  .articleGrid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after { animation: none; }
+}
