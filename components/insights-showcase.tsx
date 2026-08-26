@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowUpRight,
+  BookMarked,
   BookOpen,
   CalendarDays,
   ChevronsLeft,
@@ -13,6 +14,8 @@ import {
   LibraryBig,
   Pause,
   Play,
+  Search,
+  Sparkles,
 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { insightCategoryIcons } from "@/components/insight-category-icons";
@@ -24,6 +27,7 @@ import {
 
 const featuredInsights = insights.filter((insight) => insight.featured);
 const publishedCategoryIds = new Set(featuredInsights.map((insight) => insight.categoryId));
+const CURATED_INSIGHT_COUNT = 5;
 const AUTO_ROTATE_DELAY = 3000;
 const CUBE_TURN_SIDES = ["right", "bottom", "left", "top"] as const;
 
@@ -81,8 +85,21 @@ function formatDate(date: string) {
   return dateFormatter.format(new Date(`${date}T00:00:00Z`));
 }
 
+function chooseRandomInsights() {
+  const shuffled = [...featuredInsights];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+  }
+
+  return shuffled.slice(0, Math.min(CURATED_INSIGHT_COUNT, shuffled.length));
+}
+
 export function InsightsShowcase() {
   const reduceMotion = useReducedMotion();
+  const [curatedInsights, setCuratedInsights] = useState(() => featuredInsights.slice(0, CURATED_INSIGHT_COUNT));
+  const [selectionReady, setSelectionReady] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(() => new Set());
   const [turnSide, setTurnSide] = useState<CubeTurnSide>("right");
@@ -91,9 +108,11 @@ export function InsightsShowcase() {
   const [hasFocus, setHasFocus] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const turnCursor = useRef(1);
-  const activeInsight = featuredInsights[activeIndex] ?? featuredInsights[0];
+  const totalSlides = curatedInsights.length + 1;
+  const isIndexSlide = activeIndex === curatedInsights.length;
+  const activeInsight = isIndexSlide ? undefined : curatedInsights[activeIndex];
   const category = activeInsight ? getInsightCategory(activeInsight.categoryId) : undefined;
-  const shouldAutoRotate = autoPlay && !reduceMotion && !isHovered && !hasFocus;
+  const shouldAutoRotate = autoPlay && !reduceMotion && !isHovered && !hasFocus && !isIndexSlide;
 
   const markImageLoaded = useCallback((slug: string) => {
     setLoadedImages((current) => {
@@ -112,33 +131,44 @@ export function InsightsShowcase() {
   }, []);
 
   const moveBy = useCallback((step: number) => {
-    if (featuredInsights.length < 2) return;
+    if (totalSlides < 2) return;
     queueCubeTurn();
-    setActiveIndex((current) => (current + step + featuredInsights.length) % featuredInsights.length);
-  }, [queueCubeTurn]);
+    setActiveIndex((current) => (current + step + totalSlides) % totalSlides);
+  }, [queueCubeTurn, totalSlides]);
 
-  const showInsight = (index: number) => {
+  const showSlide = (index: number) => {
     if (index === activeIndex) return;
     queueCubeTurn();
     setActiveIndex(index);
   };
 
   useEffect(() => {
-    if (featuredInsights.length < 2) return;
-
     const frame = window.requestAnimationFrame(() => {
-      setActiveIndex(Math.floor(Math.random() * featuredInsights.length));
+      setCuratedInsights(chooseRandomInsights());
+      setActiveIndex(0);
+      setSelectionReady(true);
     });
 
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
-    if (!shouldAutoRotate || featuredInsights.length < 2) return;
+    if (!shouldAutoRotate || totalSlides < 2) return;
 
     const timer = window.setTimeout(() => moveBy(1), AUTO_ROTATE_DELAY);
     return () => window.clearTimeout(timer);
-  }, [activeIndex, moveBy, shouldAutoRotate]);
+  }, [activeIndex, moveBy, shouldAutoRotate, totalSlides]);
+
+  const handleAutoPlayControl = () => {
+    if (isIndexSlide) {
+      queueCubeTurn();
+      setActiveIndex(0);
+      setAutoPlay(true);
+      return;
+    }
+
+    setAutoPlay((current) => !current);
+  };
 
   const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
     touchStartX.current = event.touches[0]?.clientX ?? null;
@@ -155,9 +185,7 @@ export function InsightsShowcase() {
     moveBy(distance > 0 ? 1 : -1);
   };
 
-  if (!activeInsight) return null;
-
-  const activeImageLoaded = loadedImages.has(activeInsight.slug);
+  const activeImageLoaded = activeInsight ? loadedImages.has(activeInsight.slug) : false;
 
   return (
     <div>
@@ -189,12 +217,14 @@ export function InsightsShowcase() {
         })}
       </motion.ul>
 
-      <div
+      {selectionReady ? <div
         className={`insight-carousel${shouldAutoRotate ? "" : " is-paused"}`}
         role="region"
         aria-label="Featured insights"
         aria-roledescription="carousel"
-        data-active-insight={activeInsight.slug}
+        data-active-insight={activeInsight?.slug ?? "insights-index"}
+        data-curated-insights={curatedInsights.map((insight) => insight.slug).join(",")}
+        data-slide-kind={isIndexSlide ? "index" : "insight"}
         data-turn-side={turnSide}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -210,16 +240,16 @@ export function InsightsShowcase() {
             <button
               type="button"
               disabled={Boolean(reduceMotion)}
-              onClick={() => setAutoPlay((current) => !current)}
-              aria-label={autoPlay ? "Pause insight rotation" : "Play insight rotation"}
-              title={reduceMotion ? "Automatic rotation follows your reduced-motion setting" : autoPlay ? "Pause rotation" : "Play rotation"}
+              onClick={handleAutoPlayControl}
+              aria-label={isIndexSlide ? "Replay insight selection" : autoPlay ? "Pause insight rotation" : "Play insight rotation"}
+              title={reduceMotion ? "Automatic rotation follows your reduced-motion setting" : isIndexSlide ? "Replay this selection" : autoPlay ? "Pause rotation" : "Play rotation"}
             >
-              {autoPlay ? <Pause size={16} /> : <Play size={16} />}
+              {autoPlay && !isIndexSlide ? <Pause size={16} /> : <Play size={16} />}
             </button>
           </div>
 
           <div className="insight-carousel-pages" role="group" aria-label="Choose an insight">
-            {featuredInsights.map((insight, index) => (
+            {curatedInsights.map((insight, index) => (
               <button
                 className={index === activeIndex ? "is-active" : ""}
                 type="button"
@@ -227,9 +257,17 @@ export function InsightsShowcase() {
                 aria-label={`Show insight: ${insight.title}`}
                 aria-current={index === activeIndex ? "true" : undefined}
                 title={insight.title}
-                onClick={() => showInsight(index)}
+                onClick={() => showSlide(index)}
               />
             ))}
+            <button
+              className={isIndexSlide ? "is-active is-index" : "is-index"}
+              type="button"
+              aria-label="Show the Insights Index invitation"
+              aria-current={isIndexSlide ? "true" : undefined}
+              title="Continue to the complete Insights Index"
+              onClick={() => showSlide(curatedInsights.length)}
+            />
           </div>
 
           <Link
@@ -252,10 +290,10 @@ export function InsightsShowcase() {
           <div className="insight-card-viewport">
             <AnimatePresence initial={false} custom={turnSide}>
               <motion.article
-                className="insight-feature-card"
-                key={activeInsight.slug}
+                className={`insight-feature-card${isIndexSlide ? " insight-index-end-card" : ""}`}
+                key={activeInsight?.slug ?? "insights-index"}
                 aria-roledescription="slide"
-                aria-label={`${activeIndex + 1} of ${featuredInsights.length}: ${activeInsight.title}`}
+                aria-label={`${activeIndex + 1} of ${totalSlides}: ${activeInsight?.title ?? "Continue to the complete Insights Index"}`}
                 custom={turnSide}
                 variants={reduceMotion ? undefined : cubeTurnVariants}
                 initial={reduceMotion ? { opacity: 0 } : "enter"}
@@ -263,52 +301,98 @@ export function InsightsShowcase() {
                 exit={reduceMotion ? { opacity: 0 } : "exit"}
                 transition={{ duration: reduceMotion ? 0.16 : 0.68, ease: [0.22, 1, 0.36, 1] }}
               >
-                <div className="insight-cover-shell">
-                  <Link className="insight-cover" href={`/insights/${activeInsight.slug}/`} aria-label={`Read ${activeInsight.title}`}>
-                    <Image
-                      className={`insight-cover-image${activeImageLoaded ? " is-loaded" : ""}`}
-                      src={activeInsight.image}
-                      alt={activeInsight.imageAlt}
-                      fill
-                      sizes="(max-width: 820px) 90vw, 45vw"
-                      onLoad={() => markImageLoaded(activeInsight.slug)}
-                      onError={() => markImageLoaded(activeInsight.slug)}
-                    />
-                    <span
-                      className="insight-cover-skeleton"
-                      data-loaded={activeImageLoaded}
-                      data-image-skeleton="home-insight"
-                      aria-hidden="true"
-                    >
-                      <i />
-                      <i />
-                      <i />
-                    </span>
-                    <div className="insight-cover-grid" aria-hidden="true"><span /><span /><span /></div>
-                    <span className="insight-feature-label"><BookOpen size={14} />Featured Insight</span>
-                    <span className="insight-cover-signal" aria-hidden="true"><i /><i /><i /></span>
-                  </Link>
-                </div>
+                {activeInsight ? (
+                  <>
+                    <div className="insight-cover-shell">
+                      <Link className="insight-cover" href={`/insights/${activeInsight.slug}/`} aria-label={`Read ${activeInsight.title}`}>
+                        <Image
+                          className={`insight-cover-image${activeImageLoaded ? " is-loaded" : ""}`}
+                          src={activeInsight.image}
+                          alt={activeInsight.imageAlt}
+                          fill
+                          sizes="(max-width: 820px) 90vw, 45vw"
+                          onLoad={() => markImageLoaded(activeInsight.slug)}
+                          onError={() => markImageLoaded(activeInsight.slug)}
+                        />
+                        <span
+                          className="insight-cover-skeleton"
+                          data-loaded={activeImageLoaded}
+                          data-image-skeleton="home-insight"
+                          aria-hidden="true"
+                        >
+                          <i />
+                          <i />
+                          <i />
+                        </span>
+                        <div className="insight-cover-grid" aria-hidden="true"><span /><span /><span /></div>
+                        <span className="insight-feature-label"><BookOpen size={14} />Featured Insight</span>
+                        <span className="insight-cover-signal" aria-hidden="true"><i /><i /><i /></span>
+                      </Link>
+                    </div>
 
-                <div className="insight-feature-copy">
-                  <div className="insight-meta">
-                    <span>{category?.label}</span>
-                    <span><Clock3 size={13} />{activeInsight.readTime}</span>
-                    <span><CalendarDays size={13} />{formatDate(activeInsight.publishedAt)}</span>
-                  </div>
-                  <h3><Link href={`/insights/${activeInsight.slug}/`}>{activeInsight.title}</Link></h3>
-                  <p>{activeInsight.excerpt}</p>
-                  <div className="insight-tags" aria-label="Article topics">
-                    {activeInsight.tags.map((tag) => <span key={tag}>{tag}</span>)}
-                  </div>
-                  <div className="insight-feature-footer">
-                    <div><span>Written by</span><strong>{activeInsight.author}</strong></div>
-                    <Link href={`/insights/${activeInsight.slug}/`}>
-                      Read Insight
-                      <ArrowUpRight size={16} />
-                    </Link>
-                  </div>
-                </div>
+                    <div className="insight-feature-copy">
+                      <div className="insight-meta">
+                        <span>{category?.label}</span>
+                        <span><Clock3 size={13} />{activeInsight.readTime}</span>
+                        <span><CalendarDays size={13} />{formatDate(activeInsight.publishedAt)}</span>
+                      </div>
+                      <h3><Link href={`/insights/${activeInsight.slug}/`}>{activeInsight.title}</Link></h3>
+                      <p>{activeInsight.excerpt}</p>
+                      <div className="insight-tags" aria-label="Article topics">
+                        {activeInsight.tags.map((tag) => <span key={tag}>{tag}</span>)}
+                      </div>
+                      <div className="insight-feature-footer">
+                        <div><span>Written by</span><strong>{activeInsight.author}</strong></div>
+                        <Link href={`/insights/${activeInsight.slug}/`}>
+                          Read Insight
+                          <ArrowUpRight size={16} />
+                        </Link>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="insight-index-end-visual" aria-hidden="true">
+                      <motion.div
+                        className="insight-index-end-art"
+                        animate={reduceMotion ? undefined : { scale: [1, 1.035, 1], x: [0, -4, 0] }}
+                        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        <Image src="/insights/insights-index-archive-portal.webp" alt="" fill sizes="(max-width: 820px) 90vw, 45vw" />
+                      </motion.div>
+                      <div className="insight-index-end-shade" />
+                      <motion.div
+                        className="insight-index-end-orbit"
+                        animate={reduceMotion ? undefined : { rotate: 360 }}
+                        transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
+                      >
+                        <span><BookMarked size={15} /></span>
+                        <span><Search size={15} /></span>
+                        <span><Sparkles size={15} /></span>
+                      </motion.div>
+                      <span className="insight-feature-label"><LibraryBig size={14} />Selection Complete</span>
+                      <span className="insight-index-end-progress"><i /><i /><i /><i /><i /></span>
+                    </div>
+
+                    <div className="insight-index-end-copy">
+                      <div className="insight-index-end-kicker"><Sparkles size={14} /><span>Five notes explored</span></div>
+                      <h3>The complete index is ready when you are.</h3>
+                      <p>
+                        This curated selection ends here. Continue through all {insights.length} engineering insights,
+                        organized for faster discovery by category, topic, and reading time.
+                      </p>
+                      <div className="insight-index-end-stats" aria-label="Insights Index summary">
+                        <div><strong>{String(insights.length).padStart(2, "0")}</strong><span>Published notes</span></div>
+                        <div><strong>{String(insightCategories.length).padStart(2, "0")}</strong><span>Editorial lanes</span></div>
+                        <div><strong>01</strong><span>Complete index</span></div>
+                      </div>
+                      <Link className="insight-index-end-action" href="/insights/">
+                        Enter the Insights Index
+                        <ArrowUpRight size={17} />
+                      </Link>
+                    </div>
+                  </>
+                )}
               </motion.article>
             </AnimatePresence>
           </div>
@@ -322,7 +406,7 @@ export function InsightsShowcase() {
             </button>
           </div>
         </div>
-      </div>
+      </div> : <div className="insight-carousel-initializing" aria-hidden="true"><i /><i /></div>}
     </div>
   );
 }
