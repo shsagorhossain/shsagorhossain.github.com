@@ -96,6 +96,53 @@ test("updates the service console from a network node", async ({ page }) => {
   await expect(page.locator(".service-console")).toContainText("Django");
 });
 
+test("answers the primary client FAQ accessibly", async ({ page }) => {
+  await page.goto("/");
+
+  const faq = page.locator("#faq");
+  await expect(faq.getByRole("heading", { name: "Frequently Asked Questions", level: 2 })).toBeVisible();
+  const question = faq.getByRole("button", { name: "Can you take my idea and build it into a production-ready product?" });
+  await expect(question).toHaveAttribute("aria-expanded", "true");
+  const answer = faq.getByRole("region", { name: "Can you take my idea and build it into a production-ready product?" });
+  await expect(answer).toContainText("complete journey");
+  await expect(answer).toContainText("Discover");
+  await expect(faq.locator(".faq-item h3 > button")).toHaveCount(8);
+
+  const expandButton = answer.getByRole("button", { name: "Expand the idea-to-production delivery plan" });
+  await expect(expandButton).toHaveAttribute("aria-haspopup", "dialog");
+  await expandButton.click();
+
+  const detailDialog = page.getByRole("dialog", { name: "A complete product journey, with every decision visible." });
+  await expect(detailDialog).toBeVisible();
+  await expect(detailDialog).toContainText("Five accountable stages");
+  await expect(detailDialog).toContainText("Production release");
+  await expect(page.locator("body")).toHaveCSS("overflow", "hidden");
+  await expect(detailDialog.getByRole("button", { name: "Close full delivery blueprint" })).toBeFocused();
+
+  await page.keyboard.press("Escape");
+  await expect(detailDialog).toHaveCount(0);
+  await expect(expandButton).toBeFocused();
+
+  const contactLink = faq.getByRole("link", { name: "Let's Talk" });
+  await expect(contactLink).toHaveAttribute("href", /Project%20enquiry/);
+  await contactLink.scrollIntoViewIfNeeded();
+  await expect(contactLink).toBeVisible();
+
+  await question.click();
+  await expect(question).toHaveAttribute("aria-expanded", "false");
+  await expect(faq.getByRole("region", { name: "Can you take my idea and build it into a production-ready product?" })).toHaveCount(0);
+
+  await question.click();
+  await expect(question).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator('.nav-links a[href="#faq"]')).toHaveAttribute("href", "#faq");
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
 test("animates career metrics to their final values", async ({ page }) => {
   await page.goto("/");
 
@@ -294,10 +341,14 @@ test("ends the homepage insight selection with a complete index invitation", asy
   await expect(carousel.locator(".insight-index-end-orbit svg")).toHaveCount(3);
   await expect(carousel.locator(".insight-index-end-art img")).toBeVisible();
   await expect(carousel.getByRole("link", { name: "Enter the Insights Index", exact: true })).toHaveAttribute("href", "/insights/");
+  await expect(carousel.getByRole("button", { name: "Show previous insight" })).toHaveCount(0);
+  await expect(carousel.getByRole("button", { name: "Show next insight" })).toHaveCount(0);
 
   await carousel.getByRole("button", { name: "Replay insight selection" }).click();
   await expect(carousel).toHaveAttribute("data-slide-kind", "insight");
   await expect(carousel.getByRole("button", { name: "Pause insight rotation" })).toBeVisible();
+  await expect(carousel.getByRole("button", { name: "Show previous insight" })).toBeVisible();
+  await expect(carousel.getByRole("button", { name: "Show next insight" })).toBeVisible();
 });
 
 test("browses, filters, and opens the dedicated Insights Index", async ({ page }) => {

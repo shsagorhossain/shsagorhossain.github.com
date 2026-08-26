@@ -10,6 +10,7 @@ import { ServicesNetwork } from "@/components/services-network";
 import { ProjectsCarousel } from "@/components/projects-carousel";
 import { TestimonialsCarousel } from "@/components/testimonials-carousel";
 import { InsightsShowcase } from "@/components/insights-showcase";
+import { FaqExperience } from "@/components/faq-experience";
 import { insightCategories, insights } from "@/data/insights";
 import {
   HomeContactBanner,
@@ -66,8 +67,6 @@ export default function Home() {
           </div>
         </HomeSection>
 
-        <HomeContactBanner />
-
         <HomeSection className="section site-shell testimonials" id="testimonials">
           <HomeReveal className="section-heading">
             <p>Client Stories</p>
@@ -75,6 +74,14 @@ export default function Home() {
           </HomeReveal>
           <TestimonialsCarousel />
         </HomeSection>
+
+        <HomeSection className="section faq" id="faq">
+          <div className="site-shell">
+            <FaqExperience />
+          </div>
+        </HomeSection>
+
+        <HomeContactBanner />
       </main>
 
       <footer>

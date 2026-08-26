@@ -405,14 +405,16 @@ export function InsightsShowcase() {
             </AnimatePresence>
           </div>
 
-          <div className="insight-card-navigation">
-            <button type="button" onClick={() => moveBy(-1)} aria-label="Show previous insight" title="Previous insight">
-              <ChevronsLeft size={25} />
-            </button>
-            <button type="button" onClick={() => moveBy(1)} aria-label="Show next insight" title="Next insight">
-              <ChevronsRight size={25} />
-            </button>
-          </div>
+          {!isIndexSlide && (
+            <div className="insight-card-navigation">
+              <button type="button" onClick={() => moveBy(-1)} aria-label="Show previous insight" title="Previous insight">
+                <ChevronsLeft size={25} />
+              </button>
+              <button type="button" onClick={() => moveBy(1)} aria-label="Show next insight" title="Next insight">
+                <ChevronsRight size={25} />
+              </button>
+            </div>
+          )}
         </div>
       </div> : <div className="insight-carousel-initializing" aria-hidden="true"><i /><i /></div>}
     </div>
