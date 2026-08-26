@@ -103,7 +103,8 @@ test("animates career metrics to their final values", async ({ page }) => {
   await expect(page.getByText("1500+", { exact: true })).toBeVisible();
 });
 
-test("scrolls through all six featured projects", async ({ page }) => {
+test("scrolls through the featured projects and reaches the project index card", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
 
   const track = page.locator(".project-track");
@@ -118,9 +119,36 @@ test("scrolls through all six featured projects", async ({ page }) => {
   ]);
   await expect(page.getByRole("button", { name: "Scroll projects left" })).toBeDisabled();
 
+  if ((page.viewportSize()?.width ?? 0) <= 640) {
+    const [trackBox, firstCardBox, secondCardBox, nextButtonBox] = await Promise.all([
+      track.boundingBox(),
+      track.locator(".project-card").first().boundingBox(),
+      track.locator(".project-card").nth(1).boundingBox(),
+      page.getByRole("button", { name: "Scroll projects right" }).boundingBox(),
+    ]);
+    expect(trackBox && firstCardBox && secondCardBox && nextButtonBox).toBeTruthy();
+    expect(trackBox!.x + trackBox!.width - secondCardBox!.x).toBeGreaterThan(55);
+    expect(Math.abs((firstCardBox!.y + firstCardBox!.height / 2) - (nextButtonBox!.y + nextButtonBox!.height / 2))).toBeLessThan(2);
+    await expect(page.getByRole("button", { name: "Scroll projects right" })).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await expect(page.getByRole("button", { name: "Scroll projects right" })).toHaveCSS("border-top-width", "0px");
+  }
+
   const initialPosition = await track.evaluate((element) => element.scrollLeft);
   await page.getByRole("button", { name: "Scroll projects right" }).click();
   await expect.poll(() => track.evaluate((element) => element.scrollLeft)).toBeGreaterThan(initialPosition);
+
+  await track.evaluate((element) => {
+    element.scrollLeft = element.scrollWidth;
+  });
+  const indexCard = track.locator(".project-index-card");
+  await expect(indexCard).toBeInViewport();
+  await expect(indexCard.getByRole("heading", { name: "You have reached the end of the featured selection." })).toBeVisible();
+  await expect(indexCard.locator(".project-index-orbit svg")).toHaveCount(3);
+  const indexLink = indexCard.getByRole("link", { name: "View All Projects" });
+  await expect(indexLink).toHaveAttribute("href", "/projects/");
+  await indexLink.click();
+  await expect(page).toHaveURL(/\/projects\/$/);
+  await expect(page.getByRole("heading", { name: "All Projects" })).toBeVisible();
 });
 
 test("shows one featured insight and supports manual carousel navigation", async ({ page }) => {
@@ -259,9 +287,10 @@ test("ends the homepage insight selection with a complete index invitation", asy
 
   await expect(carousel).toHaveAttribute("data-active-insight", "insights-index");
   await expect(carousel).toHaveAttribute("data-slide-kind", "index");
-  await expect(carousel.getByRole("heading", { name: "The complete index is ready when you are.", level: 3 })).toBeVisible();
-  await expect(carousel).toContainText("This curated selection ends here.");
-  await expect(carousel).toContainText("10 engineering insights");
+  await expect(carousel.getByRole("heading", { name: "This five-note selection ends here.", level: 3 })).toBeVisible();
+  await expect(carousel).toContainText("End of curated selection");
+  await expect(carousel).toContainText("05 / 05");
+  await expect(carousel).toContainText("all 10 engineering notes");
   await expect(carousel.locator(".insight-index-end-orbit svg")).toHaveCount(3);
   await expect(carousel.locator(".insight-index-end-art img")).toBeVisible();
   await expect(carousel.getByRole("link", { name: "Enter the Insights Index", exact: true })).toHaveAttribute("href", "/insights/");
@@ -651,6 +680,7 @@ test("opens the Zappilo case study from the project title", async ({ page }) => 
 });
 
 test("clears the project loading state after returning with browser back", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
 
   const projectCard = page.locator(".project-card").filter({ hasText: "Zappilo - AI Communication Platform" });
@@ -667,7 +697,7 @@ test("clears the project loading state after returning with browser back", async
 test("opens and sorts the complete project archive", async ({ page }) => {
   await page.goto("/");
 
-  await page.getByRole("link", { name: "View All Projects" }).click();
+  await page.getByRole("link", { name: "View All Projects" }).first().click();
   await expect(page).toHaveURL(/\/projects\/$/);
   await expect(page.getByRole("heading", { name: "All Projects" })).toBeVisible();
   await expect(page.locator("main article")).toHaveCount(6);

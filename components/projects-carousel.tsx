@@ -2,11 +2,25 @@
 
 import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import Image from "next/image";
-import { ChevronsLeft, ChevronsRight, ExternalLink, LoaderCircle } from "lucide-react";
+import Link from "next/link";
+import {
+  ArrowUpRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Code2,
+  Database,
+  ExternalLink,
+  FolderKanban,
+  Layers3,
+  LoaderCircle,
+  Sparkles,
+} from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { projects, type PortfolioProject } from "@/data/projects";
 
-const featuredProjects = projects.filter((project) => project.featured);
+const HOMEPAGE_PROJECT_LIMIT = 10;
+const homepageProjects = projects.slice(0, HOMEPAGE_PROJECT_LIMIT);
+const totalSlides = homepageProjects.length + 1;
 
 export function ProjectsCarousel() {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -24,7 +38,7 @@ export function ProjectsCarousel() {
     const card = track.querySelector<HTMLElement>(".project-card");
     if (card) {
       const gap = Number.parseFloat(window.getComputedStyle(track).columnGap) || 16;
-      const nextProject = Math.min(featuredProjects.length - 1, Math.round(track.scrollLeft / (card.offsetWidth + gap)));
+      const nextProject = Math.min(totalSlides - 1, Math.round(track.scrollLeft / (card.offsetWidth + gap)));
       setCurrentProject(nextProject);
       setCanScrollLeft(nextProject > 0);
     }
@@ -115,15 +129,15 @@ export function ProjectsCarousel() {
       </AnimatePresence>
 
       <div className="project-track" ref={trackRef} aria-label="Featured projects">
-        {featuredProjects.map((project, index) => {
+        {homepageProjects.map((project, index) => {
           const isLoading = loadingProject === project.title;
           return (
             <motion.article
             className={`project-card ${isLoading ? "is-loading" : ""}`}
             key={project.title}
-            initial={reduceMotion ? false : { opacity: 0, x: 24 }}
+            initial={reduceMotion ? false : { opacity: 0, x: 14 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, root: trackRef, amount: 0.3 }}
+            viewport={{ once: true, root: trackRef, amount: 0.08 }}
             transition={{ duration: 0.5, delay: Math.min(index * 0.07, 0.21) }}
             whileHover={reduceMotion ? undefined : { y: -5 }}
           >
@@ -156,13 +170,59 @@ export function ProjectsCarousel() {
           </motion.article>
           );
         })}
+
+        <motion.article
+          className="project-index-card"
+          initial={reduceMotion ? false : { opacity: 0, x: 14 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, root: trackRef, amount: 0.08 }}
+          transition={{ duration: 0.5, delay: 0.18 }}
+          whileHover={reduceMotion ? undefined : { y: -5 }}
+          aria-label="Continue to all projects"
+        >
+          <div className="project-index-backdrop" aria-hidden="true"><i /><i /><i /></div>
+          <div className="project-index-header">
+            <span><Sparkles size={12} />End of selection</span>
+            <strong>{String(homepageProjects.length).padStart(2, "0")} / {String(homepageProjects.length).padStart(2, "0")}</strong>
+          </div>
+          <div className="project-index-gateway" aria-hidden="true">
+            <motion.div
+              className="project-index-orbit"
+              animate={reduceMotion ? undefined : { rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            >
+              <span><Code2 size={14} /></span>
+              <span><Database size={14} /></span>
+              <span><Layers3 size={14} /></span>
+            </motion.div>
+            <motion.span
+              className="project-index-core"
+              animate={reduceMotion ? undefined : { scale: [1, 1.07, 1] }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <FolderKanban size={29} />
+            </motion.span>
+          </div>
+          <div className="project-index-copy">
+            <span>Complete portfolio archive</span>
+            <h3>You have reached the end of the featured selection.</h3>
+            <p>
+              Continue to the complete index for every case study, product story, and technical build.
+            </p>
+          </div>
+          <Link className="project-index-action" href="/projects/">
+            View All Projects
+            <ArrowUpRight size={16} />
+          </Link>
+          <span className="project-index-edge" aria-hidden="true">Project index</span>
+        </motion.article>
       </div>
 
       <div className="carousel-footer">
         <div className="carousel-position" aria-live="polite" aria-atomic="true">
           <strong>{String(currentProject + 1).padStart(2, "0")}</strong>
           <span aria-hidden="true" />
-          {String(featuredProjects.length).padStart(2, "0")}
+          {String(totalSlides).padStart(2, "0")}
         </div>
         <div className="carousel-controls">
           <button

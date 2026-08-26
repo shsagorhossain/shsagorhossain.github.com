@@ -290,7 +290,7 @@ export function InsightsShowcase() {
           <div className="insight-card-viewport">
             <AnimatePresence initial={false} custom={turnSide}>
               <motion.article
-                className={`insight-feature-card${isIndexSlide ? " insight-index-end-card" : ""}`}
+                className={`insight-carousel-slide ${isIndexSlide ? "insight-index-end-card" : "insight-feature-card"}`}
                 key={activeInsight?.slug ?? "insights-index"}
                 aria-roledescription="slide"
                 aria-label={`${activeIndex + 1} of ${totalSlides}: ${activeInsight?.title ?? "Continue to the complete Insights Index"}`}
@@ -352,45 +352,53 @@ export function InsightsShowcase() {
                   </>
                 ) : (
                   <>
-                    <div className="insight-index-end-visual" aria-hidden="true">
-                      <motion.div
-                        className="insight-index-end-art"
-                        animate={reduceMotion ? undefined : { scale: [1, 1.035, 1], x: [0, -4, 0] }}
-                        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                      >
-                        <Image src="/insights/insights-index-archive-portal.webp" alt="" fill sizes="(max-width: 820px) 90vw, 45vw" />
-                      </motion.div>
-                      <div className="insight-index-end-shade" />
-                      <motion.div
-                        className="insight-index-end-orbit"
-                        animate={reduceMotion ? undefined : { rotate: 360 }}
-                        transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
-                      >
-                        <span><BookMarked size={15} /></span>
-                        <span><Search size={15} /></span>
-                        <span><Sparkles size={15} /></span>
-                      </motion.div>
-                      <span className="insight-feature-label"><LibraryBig size={14} />Selection Complete</span>
-                      <span className="insight-index-end-progress"><i /><i /><i /><i /><i /></span>
+                    <div className="insight-index-end-backdrop" aria-hidden="true"><i /><i /><i /></div>
+                    <div className="insight-index-end-header">
+                      <span><Sparkles size={13} />End of curated selection</span>
+                      <strong>05 / 05</strong>
                     </div>
 
-                    <div className="insight-index-end-copy">
-                      <div className="insight-index-end-kicker"><Sparkles size={14} /><span>Five notes explored</span></div>
-                      <h3>The complete index is ready when you are.</h3>
-                      <p>
-                        This curated selection ends here. Continue through all {insights.length} engineering insights,
-                        organized for faster discovery by category, topic, and reading time.
-                      </p>
-                      <div className="insight-index-end-stats" aria-label="Insights Index summary">
-                        <div><strong>{String(insights.length).padStart(2, "0")}</strong><span>Published notes</span></div>
-                        <div><strong>{String(insightCategories.length).padStart(2, "0")}</strong><span>Editorial lanes</span></div>
-                        <div><strong>01</strong><span>Complete index</span></div>
+                    <div className="insight-index-end-body">
+                      <div className="insight-index-end-portal" aria-hidden="true">
+                        <motion.div
+                          className="insight-index-end-art"
+                          animate={reduceMotion ? undefined : { scale: [1, 1.035, 1], rotate: [0, 0.8, 0] }}
+                          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                          <Image src="/insights/insights-index-archive-portal.webp" alt="" fill sizes="(max-width: 640px) 220px, 250px" />
+                        </motion.div>
+                        <motion.div
+                          className="insight-index-end-orbit"
+                          animate={reduceMotion ? undefined : { rotate: 360 }}
+                          transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
+                        >
+                          <span><BookMarked size={15} /></span>
+                          <span><Search size={15} /></span>
+                          <span><Sparkles size={15} /></span>
+                        </motion.div>
+                        <span className="insight-index-end-seal"><LibraryBig size={14} />Selection complete</span>
                       </div>
-                      <Link className="insight-index-end-action" href="/insights/">
-                        Enter the Insights Index
-                        <ArrowUpRight size={17} />
-                      </Link>
+
+                      <div className="insight-index-end-copy">
+                        <div className="insight-index-end-kicker"><BookOpen size={14} /><span>Continue from the index</span></div>
+                        <h3>This five-note selection ends here.</h3>
+                        <p>
+                          The complete Insights Index is ready when you are. Browse all {insights.length} engineering
+                          notes by category, topic, and reading time.
+                        </p>
+                        <div className="insight-index-end-stats" aria-label="Insights Index summary">
+                          <div><strong>{String(insights.length).padStart(2, "0")}</strong><span>Published notes</span></div>
+                          <div><strong>{String(insightCategories.length).padStart(2, "0")}</strong><span>Editorial lanes</span></div>
+                          <div><strong>01</strong><span>Complete index</span></div>
+                        </div>
+                        <Link className="insight-index-end-action" href="/insights/">
+                          Enter the Insights Index
+                          <ArrowUpRight size={17} />
+                        </Link>
+                      </div>
                     </div>
+
+                    <span className="insight-index-end-progress" aria-hidden="true"><i /><i /><i /><i /><i /></span>
                   </>
                 )}
               </motion.article>
