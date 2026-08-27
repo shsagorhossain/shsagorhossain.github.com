@@ -4,29 +4,48 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowUpRight,
+  Activity,
+  Boxes,
   Braces,
   BriefcaseBusiness,
   CalendarClock,
   CheckCircle2,
+  ClipboardCheck,
+  CloudCog,
   Code2,
   Compass,
   Database,
   FileCheck2,
   Gauge,
+  GitBranch,
+  GitPullRequest,
+  Handshake,
   Layers3,
+  LayoutTemplate,
+  LockKeyhole,
   Maximize2,
+  MessageSquareText,
   MessageCircleQuestion,
+  Milestone,
   Minus,
   MonitorSmartphone,
   Network,
+  PackageCheck,
+  PanelTop,
   PlugZap,
   Plus,
+  RefreshCw,
   Rocket,
+  Search,
+  ScanSearch,
   ServerCog,
   Send,
   ShieldCheck,
+  TestTube2,
   Users,
+  Waypoints,
   Workflow,
+  Wrench,
   X,
 } from "lucide-react";
 import { SiDjango, SiPython, SiReact } from "react-icons/si";
@@ -105,25 +124,112 @@ const deliveryOutputs = [
   { title: "Production readiness", detail: "Testing, deployment, monitoring, and launch criteria included.", icon: CheckCircle2 },
 ];
 
+const technologyLayers = [
+  { title: "Interface", detail: "React, Next.js, TypeScript, Tailwind CSS", icon: LayoutTemplate, tone: "blue" },
+  { title: "Application", detail: "Python, Django, FastAPI, REST APIs", icon: ServerCog, tone: "purple" },
+  { title: "Data", detail: "PostgreSQL, Redis, object storage", icon: Database, tone: "yellow" },
+  { title: "Delivery", detail: "Docker, Linux, CI/CD, monitoring", icon: CloudCog, tone: "green" },
+];
+
+const technologyChecks = [
+  { title: "Product fit", detail: "The product workflow and required integrations come first.", icon: Boxes },
+  { title: "Operational risk", detail: "Security, failure recovery, and observability shape the design.", icon: LockKeyhole },
+  { title: "Team longevity", detail: "Readable conventions and established tooling reduce future friction.", icon: Users },
+  { title: "Expected scale", detail: "Complexity is introduced only when the real workload needs it.", icon: Gauge },
+];
+
+const technologyOutputs = [
+  { title: "Maintainable architecture", detail: "Clear ownership boundaries and conventions for future work.", icon: Layers3 },
+  { title: "Integration ready", detail: "APIs and external services fit into a deliberate system design.", icon: PlugZap },
+  { title: "Practical handover", detail: "The environment, deployment path, and key decisions are documented.", icon: FileCheck2 },
+];
+
+const collaborationStages = [
+  { number: "01", title: "Align", detail: "Goals, scope, owners", icon: Handshake },
+  { number: "02", title: "Plan", detail: "Milestone and decisions", icon: Milestone },
+  { number: "03", title: "Build", detail: "Visible working progress", icon: Code2 },
+  { number: "04", title: "Review", detail: "Demo, feedback, approval", icon: MessageSquareText },
+  { number: "05", title: "Release", detail: "Validate and hand over", icon: PackageCheck },
+];
+
+const collaborationOutputs = [
+  { title: "Visible progress", detail: "Working demonstrations replace vague percentage updates.", icon: MonitorSmartphone },
+  { title: "Recorded decisions", detail: "Scope changes and approvals remain clear to everyone.", icon: FileCheck2 },
+  { title: "One accountable path", detail: "You always know who owns the next action and release.", icon: GitBranch },
+];
+
+const codebaseStages = [
+  { number: "01", title: "Inspect", detail: "Run, read, and observe", icon: ScanSearch },
+  { number: "02", title: "Map", detail: "Architecture and dependencies", icon: Waypoints },
+  { number: "03", title: "Stabilize", detail: "Protect critical behavior", icon: ShieldCheck },
+  { number: "04", title: "Improve", detail: "Small controlled changes", icon: Wrench },
+  { number: "05", title: "Verify", detail: "Regression and release checks", icon: ClipboardCheck },
+];
+
+const codebaseAuditAreas = [
+  { title: "Architecture", detail: "Boundaries, coupling, ownership", icon: Layers3 },
+  { title: "Behavior", detail: "Critical workflows and regressions", icon: Activity },
+  { title: "Data", detail: "Models, migrations, integrity", icon: Database },
+  { title: "Delivery", detail: "Tests, deployment, observability", icon: CloudCog },
+];
+
+const codebaseOutputs = [
+  { title: "Technical assessment", detail: "A concise map of architecture, constraints, and current risks.", icon: ScanSearch },
+  { title: "Prioritized change plan", detail: "Improvements ordered by business value, risk, and dependency.", icon: FileCheck2 },
+  { title: "Controlled delivery", detail: "Small reviewable changes with regression and release checks.", icon: GitPullRequest },
+];
+
+const fullStackLayers = [
+  { number: "01", title: "Experience", detail: "User workflow and interface", icon: MonitorSmartphone },
+  { number: "02", title: "Frontend", detail: "State, validation, interaction", icon: PanelTop },
+  { number: "03", title: "Backend", detail: "Rules, security, APIs", icon: ServerCog },
+  { number: "04", title: "Data", detail: "Models and integrations", icon: Database },
+  { number: "05", title: "Delivery", detail: "Deploy, observe, support", icon: CloudCog },
+];
+
+const fullStackConcerns = [
+  { title: "User experience", detail: "Interfaces reflect real workflows, permissions, and system state.", icon: MonitorSmartphone },
+  { title: "Business behavior", detail: "Backend rules and API contracts stay aligned with the interface.", icon: Workflow },
+  { title: "Data and services", detail: "Models, integrations, and failure paths support reliable operation.", icon: PlugZap },
+  { title: "Production delivery", detail: "Deployment, monitoring, and support are part of the same design.", icon: CloudCog },
+];
+
+const fullStackOutputs = [
+  { title: "Consistent workflows", detail: "Frontend states and backend rules describe the same product behavior.", icon: CheckCircle2 },
+  { title: "Fewer handoffs", detail: "Cross-layer decisions move without ownership gaps or translation loss.", icon: GitBranch },
+  { title: "One product owner", detail: "A single technical path remains accountable through production.", icon: Users },
+];
+
+type FaqDetailId = "idea-to-production" | "technology-stack" | "client-process" | "existing-codebase" | "full-stack";
+
+const detailMeta: Record<FaqDetailId, { index: string; label: string; titleId: string }> = {
+  "idea-to-production": { index: "FAQ 01", label: "Product Delivery Blueprint", titleId: "idea-delivery-title" },
+  "technology-stack": { index: "FAQ 02", label: "Technology Decision Map", titleId: "technology-detail-title" },
+  "client-process": { index: "FAQ 03", label: "Collaboration Workflow", titleId: "collaboration-detail-title" },
+  "existing-codebase": { index: "FAQ 04", label: "Existing System Assessment", titleId: "codebase-detail-title" },
+  "full-stack": { index: "FAQ 05", label: "Full-Stack System Map", titleId: "fullstack-detail-title" },
+};
+
 export function FaqExperience() {
   const reduceMotion = useReducedMotion();
   const [openItem, setOpenItem] = useState<string | null>(faqItems[0].id);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const expandButtonRef = useRef<HTMLButtonElement>(null);
+  const [detailOpen, setDetailOpen] = useState<FaqDetailId | null>(null);
+  const expandButtonRef = useRef<HTMLButtonElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const activeDetail = detailOpen ? detailMeta[detailOpen] : null;
 
   useEffect(() => {
     if (!detailOpen) return;
 
     const previousOverflow = document.body.style.overflow;
     const expandTrigger = expandButtonRef.current;
-    const dialog = document.getElementById("idea-delivery-dialog");
+    const dialog = document.getElementById("faq-detail-dialog");
     const focusableElements = dialog?.querySelectorAll<HTMLElement>("button, a[href]");
     const firstFocusable = focusableElements?.[0];
     const lastFocusable = focusableElements?.[focusableElements.length - 1];
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setDetailOpen(false);
+        setDetailOpen(null);
         return;
       }
 
@@ -222,6 +328,7 @@ export function FaqExperience() {
         <div className="faq-list" aria-label="Frequently asked questions">
           {faqItems.map((item, index) => {
             const isOpen = openItem === item.id;
+            const hasExpandedDetail = index < 5;
             const buttonId = `faq-button-${item.id}`;
             const panelId = `faq-panel-${item.id}`;
 
@@ -262,19 +369,21 @@ export function FaqExperience() {
                       exit={reduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
                       transition={{ duration: reduceMotion ? 0.01 : 0.38, ease: [0.22, 1, 0.36, 1] }}
                     >
-                      <div className={`faq-answer-content${item.id === "idea-to-production" ? " is-enhanced" : ""}`}>
+                      <div className={`faq-answer-content${hasExpandedDetail ? " is-enhanced" : ""}`}>
                         <div className="faq-answer-copy-row">
                           <p>{item.answer}</p>
-                          {item.id === "idea-to-production" && (
+                          {hasExpandedDetail && (
                             <button
                               className="faq-answer-expand"
                               type="button"
-                              ref={expandButtonRef}
-                              aria-label="Expand the idea-to-production delivery plan"
+                              aria-label={`Expand details for: ${item.question}`}
                               aria-haspopup="dialog"
-                              aria-controls="idea-delivery-dialog"
-                              title="Open full delivery blueprint"
-                              onClick={() => setDetailOpen(true)}
+                              aria-controls="faq-detail-dialog"
+                              title="Open full visual explanation"
+                              onClick={(event) => {
+                                expandButtonRef.current = event.currentTarget;
+                                setDetailOpen(item.id as FaqDetailId);
+                              }}
                             >
                               <Maximize2 size={18} />
                             </button>
@@ -284,6 +393,50 @@ export function FaqExperience() {
                         {item.id === "idea-to-production" && (
                           <div className="faq-answer-mini-flow" aria-label="Idea-to-production delivery stages">
                             {deliveryStages.map(({ title, icon: Icon }) => (
+                              <span key={title}>
+                                <i><Icon size={13} /></i>
+                                <b>{title}</b>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {item.id === "technology-stack" && (
+                          <div className="faq-answer-mini-flow is-technology" aria-label="Technology architecture layers">
+                            {technologyLayers.map(({ title, icon: Icon }) => (
+                              <span key={title}>
+                                <i><Icon size={13} /></i>
+                                <b>{title}</b>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {item.id === "client-process" && (
+                          <div className="faq-answer-mini-flow is-collaboration" aria-label="Client collaboration stages">
+                            {collaborationStages.map(({ title, icon: Icon }) => (
+                              <span key={title}>
+                                <i><Icon size={13} /></i>
+                                <b>{title}</b>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {item.id === "existing-codebase" && (
+                          <div className="faq-answer-mini-flow is-codebase" aria-label="Existing codebase improvement stages">
+                            {codebaseStages.map(({ title, icon: Icon }) => (
+                              <span key={title}>
+                                <i><Icon size={13} /></i>
+                                <b>{title}</b>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {item.id === "full-stack" && (
+                          <div className="faq-answer-mini-flow is-fullstack" aria-label="Full-stack system layers">
+                            {fullStackLayers.map(({ title, icon: Icon }) => (
                               <span key={title}>
                                 <i><Icon size={13} /></i>
                                 <b>{title}</b>
@@ -322,7 +475,7 @@ export function FaqExperience() {
 
       {typeof document !== "undefined" && createPortal(
         <AnimatePresence>
-          {detailOpen && (
+          {detailOpen && activeDetail && (
           <motion.div
             className="faq-detail-modal-layer"
             initial={{ opacity: 0 }}
@@ -333,15 +486,15 @@ export function FaqExperience() {
             <motion.button
               className="faq-detail-modal-backdrop"
               type="button"
-              aria-label="Close delivery blueprint"
-              onClick={() => setDetailOpen(false)}
+              aria-label="Close expanded FAQ details"
+              onClick={() => setDetailOpen(null)}
             />
             <motion.section
               className="faq-detail-modal"
-              id="idea-delivery-dialog"
+              id="faq-detail-dialog"
               role="dialog"
               aria-modal="true"
-              aria-labelledby="idea-delivery-title"
+              aria-labelledby={activeDetail.titleId}
               initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.965, y: 24 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.975, y: 16 }}
@@ -349,15 +502,15 @@ export function FaqExperience() {
             >
               <header className="faq-detail-modal-header">
                 <div>
-                  <span><Network size={14} />FAQ 01</span>
-                  <strong>Product Delivery Blueprint</strong>
+                  <span><Network size={14} />{activeDetail.index}</span>
+                  <strong>{activeDetail.label}</strong>
                 </div>
                 <button
                   type="button"
                   ref={closeButtonRef}
-                  aria-label="Close full delivery blueprint"
-                  title="Close blueprint"
-                  onClick={() => setDetailOpen(false)}
+                  aria-label="Close expanded FAQ details"
+                  title="Close details"
+                  onClick={() => setDetailOpen(null)}
                 >
                   <X size={22} />
                 </button>
@@ -365,6 +518,8 @@ export function FaqExperience() {
 
               <div className="faq-detail-modal-scroll">
                 <div className="faq-detail-modal-inner">
+                  {detailOpen === "idea-to-production" && (
+                    <>
                   <section className="faq-detail-hero">
                     <motion.div
                       className="faq-detail-copy"
@@ -464,6 +619,418 @@ export function FaqExperience() {
                       <ArrowUpRight size={17} />
                     </a>
                   </section>
+                    </>
+                  )}
+
+                  {detailOpen === "technology-stack" && (
+                    <>
+                      <section className="faq-detail-hero faq-technology-hero">
+                        <motion.div
+                          className="faq-detail-copy"
+                          initial={reduceMotion ? false : { opacity: 0, x: -22 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: reduceMotion ? 0 : 0.16, duration: 0.5 }}
+                        >
+                          <span className="faq-detail-kicker"><i />Architecture before tooling</span>
+                          <h2 id="technology-detail-title">The stack follows the product, not the trend.</h2>
+                          <p>I specialize in a modern Python and TypeScript stack, but technology selection starts with your workflows, integrations, operational constraints, and future ownership. The goal is a system that is capable without being unnecessarily complex.</p>
+                          <div className="faq-detail-principles" aria-label="Technology selection principles">
+                            <span><CheckCircle2 size={15} />Proven production tools</span>
+                            <span><CheckCircle2 size={15} />Fit existing systems</span>
+                            <span><CheckCircle2 size={15} />Optimize for maintainability</span>
+                          </div>
+                        </motion.div>
+
+                        <motion.div
+                          className="faq-detail-system faq-technology-map"
+                          aria-label="Technology architecture map"
+                          initial={reduceMotion ? false : { opacity: 0, x: 24 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: reduceMotion ? 0 : 0.22, duration: 0.55 }}
+                        >
+                          <header>
+                            <span>Technology architecture</span>
+                            <strong><i />Fit analysis active</strong>
+                          </header>
+                          <div className="faq-technology-stack">
+                            <motion.div
+                              className="faq-technology-brief"
+                              animate={reduceMotion ? undefined : { scale: [1, 1.025, 1] }}
+                              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                              <Search size={20} />
+                              <div><b>Product requirements</b><small>Workflow, risk, ownership, scale</small></div>
+                            </motion.div>
+                            <div className="faq-technology-layer-list">
+                              {technologyLayers.map(({ title, detail, icon: Icon, tone }) => (
+                                <article className={`is-${tone}`} key={title}>
+                                  <Icon size={20} />
+                                  <div><b>{title}</b><small>{detail}</small></div>
+                                </article>
+                              ))}
+                            </div>
+                            <div className="faq-technology-foundation">
+                              <span><ShieldCheck size={15} />Security</span>
+                              <span><TestTube2 size={15} />Testing</span>
+                              <span><CloudCog size={15} />Operations</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      </section>
+
+                      <section className="faq-detail-process" aria-labelledby="technology-checks-title">
+                        <div className="faq-detail-section-heading">
+                          <div>
+                            <span>Decision filters</span>
+                            <h3 id="technology-checks-title">Four questions before choosing a tool</h3>
+                          </div>
+                          <p>A familiar framework is useful only when it improves delivery, operation, and long-term ownership.</p>
+                        </div>
+                        <div className="faq-technology-check-grid">
+                          {technologyChecks.map(({ title, detail, icon: Icon }, index) => (
+                            <motion.article
+                              key={title}
+                              initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: reduceMotion ? 0 : 0.28 + index * 0.07, duration: 0.42 }}
+                            >
+                              <span>{String(index + 1).padStart(2, "0")}</span>
+                              <Icon size={20} />
+                              <h4>{title}</h4>
+                              <p>{detail}</p>
+                            </motion.article>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="faq-detail-outcomes" aria-labelledby="technology-outcomes-title">
+                        <div>
+                          <span>What this protects</span>
+                          <h3 id="technology-outcomes-title">A stack your product can grow with.</h3>
+                        </div>
+                        <div className="faq-detail-output-grid">
+                          {technologyOutputs.map(({ title, detail, icon: Icon }) => (
+                            <article key={title}>
+                              <Icon size={20} />
+                              <div><strong>{title}</strong><p>{detail}</p></div>
+                            </article>
+                          ))}
+                        </div>
+                        <a href="mailto:shsagor.11s@gmail.com?subject=Technology%20consultation">
+                          Discuss your architecture
+                          <ArrowUpRight size={17} />
+                        </a>
+                      </section>
+                    </>
+                  )}
+
+                  {detailOpen === "client-process" && (
+                    <>
+                      <section className="faq-detail-hero faq-collaboration-hero">
+                        <motion.div
+                          className="faq-detail-copy"
+                          initial={reduceMotion ? false : { opacity: 0, x: -22 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: reduceMotion ? 0 : 0.16, duration: 0.5 }}
+                        >
+                          <span className="faq-detail-kicker"><i />No black-box development</span>
+                          <h2 id="collaboration-detail-title">You always know what is moving and what ships next.</h2>
+                          <p>I turn the project into visible milestones, demonstrate working progress, and keep decisions close to the work they affect. You receive enough context to make confident product decisions without managing the engineering day to day.</p>
+                          <div className="faq-detail-principles" aria-label="Client collaboration principles">
+                            <span><CheckCircle2 size={15} />One accountable contact</span>
+                            <span><CheckCircle2 size={15} />Working milestone demos</span>
+                            <span><CheckCircle2 size={15} />Decisions recorded clearly</span>
+                          </div>
+                        </motion.div>
+
+                        <motion.div
+                          className="faq-detail-system faq-collaboration-board"
+                          aria-label="Client collaboration workflow"
+                          initial={reduceMotion ? false : { opacity: 0, x: 24 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: reduceMotion ? 0 : 0.22, duration: 0.55 }}
+                        >
+                          <header>
+                            <span>Collaboration workspace</span>
+                            <strong><i />Milestone in progress</strong>
+                          </header>
+                          <div className="faq-collaboration-map">
+                            <div className="faq-collaboration-client">
+                              <span><Users size={20} /></span>
+                              <div><b>Client direction</b><small>Goals, feedback, approvals</small></div>
+                            </div>
+                            <div className="faq-collaboration-cycle">
+                              <header><span>Current build cycle</span><strong>02 / 04</strong></header>
+                              <div>
+                                <span className="is-complete"><CheckCircle2 size={17} /><b>Plan</b><small>Aligned</small></span>
+                                <motion.span
+                                  className="is-active"
+                                  animate={reduceMotion ? undefined : { borderColor: ["rgba(124,85,235,.55)", "rgba(87,140,255,.9)", "rgba(124,85,235,.55)"] }}
+                                  transition={{ duration: 2.6, repeat: Infinity }}
+                                ><Code2 size={17} /><b>Build</b><small>In progress</small></motion.span>
+                                <span><MonitorSmartphone size={17} /><b>Demo</b><small>Scheduled</small></span>
+                                <span><MessageSquareText size={17} /><b>Decide</b><small>Next action</small></span>
+                              </div>
+                            </div>
+                            <div className="faq-collaboration-loop">
+                              <RefreshCw size={17} />
+                              <span><b>Feedback loop</b><small>Review, decide, continue</small></span>
+                              <i /><i /><i />
+                            </div>
+                          </div>
+                        </motion.div>
+                      </section>
+
+                      <section className="faq-detail-process" aria-labelledby="collaboration-process-title">
+                        <div className="faq-detail-section-heading">
+                          <div>
+                            <span>Working rhythm</span>
+                            <h3 id="collaboration-process-title">Five visible collaboration stages</h3>
+                          </div>
+                          <p>The process creates deliberate moments for your input without turning your calendar into a project-management tool.</p>
+                        </div>
+                        <div className="faq-detail-stage-grid faq-collaboration-stage-grid">
+                          {collaborationStages.map(({ number, title, detail, icon: Icon }, index) => (
+                            <motion.article
+                              key={title}
+                              initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: reduceMotion ? 0 : 0.28 + index * 0.07, duration: 0.42 }}
+                            >
+                              <header><span>{number}</span><Icon size={19} /></header>
+                              <h4>{title}</h4>
+                              <p>{detail}</p>
+                            </motion.article>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="faq-detail-outcomes" aria-labelledby="collaboration-outcomes-title">
+                        <div>
+                          <span>What you experience</span>
+                          <h3 id="collaboration-outcomes-title">Clear ownership without constant supervision.</h3>
+                        </div>
+                        <div className="faq-detail-output-grid">
+                          {collaborationOutputs.map(({ title, detail, icon: Icon }) => (
+                            <article key={title}>
+                              <Icon size={20} />
+                              <div><strong>{title}</strong><p>{detail}</p></div>
+                            </article>
+                          ))}
+                        </div>
+                        <a href="mailto:shsagor.11s@gmail.com?subject=Project%20collaboration%20enquiry">
+                          Start a conversation
+                          <ArrowUpRight size={17} />
+                        </a>
+                      </section>
+                    </>
+                  )}
+
+                  {detailOpen === "existing-codebase" && (
+                    <>
+                      <section className="faq-detail-hero faq-codebase-hero">
+                        <motion.div
+                          className="faq-detail-copy"
+                          initial={reduceMotion ? false : { opacity: 0, x: -22 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: reduceMotion ? 0 : 0.16, duration: 0.5 }}
+                        >
+                          <span className="faq-detail-kicker"><i />Understand before changing</span>
+                          <h2 id="codebase-detail-title">Improve the system without losing what already works.</h2>
+                          <p>I begin by running the product, tracing its critical workflows, and mapping the architecture around real behavior. Improvements then move through small reviewable changes, with regression protection and release checks around the areas the business already depends on.</p>
+                          <div className="faq-detail-principles" aria-label="Existing codebase principles">
+                            <span><CheckCircle2 size={15} />Behavior before assumptions</span>
+                            <span><CheckCircle2 size={15} />Risk-prioritized changes</span>
+                            <span><CheckCircle2 size={15} />Incremental release path</span>
+                          </div>
+                        </motion.div>
+
+                        <motion.div
+                          className="faq-detail-system faq-codebase-board"
+                          aria-label="Existing codebase assessment map"
+                          initial={reduceMotion ? false : { opacity: 0, x: 24 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: reduceMotion ? 0 : 0.22, duration: 0.55 }}
+                        >
+                          <header>
+                            <span>System assessment</span>
+                            <strong><i />Read-only audit active</strong>
+                          </header>
+                          <div className="faq-codebase-map">
+                            <motion.div
+                              className="faq-codebase-source"
+                              animate={reduceMotion ? undefined : { scale: [1, 1.025, 1] }}
+                              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                              <Braces size={21} />
+                              <div><b>Existing application</b><small>Working behavior, history, constraints</small></div>
+                            </motion.div>
+                            <div className="faq-codebase-audit-grid">
+                              {codebaseAuditAreas.map(({ title, detail, icon: Icon }, index) => (
+                                <article key={title}>
+                                  <span>{String(index + 1).padStart(2, "0")}</span>
+                                  <Icon size={19} />
+                                  <div><b>{title}</b><small>{detail}</small></div>
+                                </article>
+                              ))}
+                            </div>
+                            <div className="faq-codebase-change-lane">
+                              <span><ShieldCheck size={16} /><b>Baseline protected</b></span>
+                              <i /><i /><i />
+                              <span><GitPullRequest size={16} /><b>Controlled change</b></span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      </section>
+
+                      <section className="faq-detail-process" aria-labelledby="codebase-process-title">
+                        <div className="faq-detail-section-heading">
+                          <div>
+                            <span>Safe improvement path</span>
+                            <h3 id="codebase-process-title">Five stages before a confident release</h3>
+                          </div>
+                          <p>The sequence limits assumptions early and keeps every later change small enough to review and verify.</p>
+                        </div>
+                        <div className="faq-detail-stage-grid faq-codebase-stage-grid">
+                          {codebaseStages.map(({ number, title, detail, icon: Icon }, index) => (
+                            <motion.article
+                              key={title}
+                              initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: reduceMotion ? 0 : 0.28 + index * 0.07, duration: 0.42 }}
+                            >
+                              <header><span>{number}</span><Icon size={19} /></header>
+                              <h4>{title}</h4>
+                              <p>{detail}</p>
+                            </motion.article>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="faq-detail-outcomes" aria-labelledby="codebase-outcomes-title">
+                        <div>
+                          <span>What you receive</span>
+                          <h3 id="codebase-outcomes-title">A practical improvement plan, not a rewrite reflex.</h3>
+                        </div>
+                        <div className="faq-detail-output-grid">
+                          {codebaseOutputs.map(({ title, detail, icon: Icon }) => (
+                            <article key={title}>
+                              <Icon size={20} />
+                              <div><strong>{title}</strong><p>{detail}</p></div>
+                            </article>
+                          ))}
+                        </div>
+                        <a href="mailto:shsagor.11s@gmail.com?subject=Existing%20codebase%20assessment">
+                          Request a codebase review
+                          <ArrowUpRight size={17} />
+                        </a>
+                      </section>
+                    </>
+                  )}
+
+                  {detailOpen === "full-stack" && (
+                    <>
+                      <section className="faq-detail-hero faq-fullstack-hero">
+                        <motion.div
+                          className="faq-detail-copy"
+                          initial={reduceMotion ? false : { opacity: 0, x: -22 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: reduceMotion ? 0 : 0.16, duration: 0.5 }}
+                        >
+                          <span className="faq-detail-kicker"><i />One connected product system</span>
+                          <h2 id="fullstack-detail-title">One product journey, from interface to infrastructure.</h2>
+                          <p>I work across the complete application so the user experience, API contracts, business rules, data model, integrations, and production environment support the same product decisions. That reduces handoffs and prevents one layer from surprising another.</p>
+                          <div className="faq-detail-principles" aria-label="Full-stack delivery principles">
+                            <span><CheckCircle2 size={15} />Shared behavior across layers</span>
+                            <span><CheckCircle2 size={15} />Security at every boundary</span>
+                            <span><CheckCircle2 size={15} />Production included in design</span>
+                          </div>
+                        </motion.div>
+
+                        <motion.div
+                          className="faq-detail-system faq-fullstack-board"
+                          aria-label="Full-stack application system map"
+                          initial={reduceMotion ? false : { opacity: 0, x: 24 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: reduceMotion ? 0 : 0.22, duration: 0.55 }}
+                        >
+                          <header>
+                            <span>Connected application</span>
+                            <strong><i />All layers online</strong>
+                          </header>
+                          <div className="faq-fullstack-map">
+                            <motion.div
+                              className="faq-fullstack-entry"
+                              animate={reduceMotion ? undefined : { scale: [1, 1.025, 1] }}
+                              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                              <Users size={20} />
+                              <div><b>User workflow</b><small>Need, action, feedback</small></div>
+                            </motion.div>
+                            <div className="faq-fullstack-layer-grid">
+                              {fullStackLayers.slice(1, 4).map(({ title, detail, icon: Icon }) => (
+                                <article key={title}>
+                                  <Icon size={21} />
+                                  <b>{title}</b>
+                                  <small>{detail}</small>
+                                </article>
+                              ))}
+                              <span className="faq-fullstack-contract"><Network size={15} />Shared contracts</span>
+                            </div>
+                            <div className="faq-fullstack-release">
+                              <CloudCog size={18} />
+                              <div><b>Production delivery</b><small>Deploy, observe, support</small></div>
+                              <i /><i /><i />
+                            </div>
+                          </div>
+                        </motion.div>
+                      </section>
+
+                      <section className="faq-detail-process" aria-labelledby="fullstack-process-title">
+                        <div className="faq-detail-section-heading">
+                          <div>
+                            <span>End-to-end ownership</span>
+                            <h3 id="fullstack-process-title">One decision across every layer</h3>
+                          </div>
+                          <p>Each technical layer has different responsibilities, but all of them must preserve the same product behavior.</p>
+                        </div>
+                        <div className="faq-technology-check-grid faq-fullstack-concern-grid">
+                          {fullStackConcerns.map(({ title, detail, icon: Icon }, index) => (
+                            <motion.article
+                              key={title}
+                              initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: reduceMotion ? 0 : 0.28 + index * 0.07, duration: 0.42 }}
+                            >
+                              <span>{String(index + 1).padStart(2, "0")}</span>
+                              <Icon size={20} />
+                              <h4>{title}</h4>
+                              <p>{detail}</p>
+                            </motion.article>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="faq-detail-outcomes" aria-labelledby="fullstack-outcomes-title">
+                        <div>
+                          <span>What this creates</span>
+                          <h3 id="fullstack-outcomes-title">A coherent product with fewer ownership gaps.</h3>
+                        </div>
+                        <div className="faq-detail-output-grid">
+                          {fullStackOutputs.map(({ title, detail, icon: Icon }) => (
+                            <article key={title}>
+                              <Icon size={20} />
+                              <div><strong>{title}</strong><p>{detail}</p></div>
+                            </article>
+                          ))}
+                        </div>
+                        <a href="mailto:shsagor.11s@gmail.com?subject=Full-stack%20product%20enquiry">
+                          Discuss your product system
+                          <ArrowUpRight size={17} />
+                        </a>
+                      </section>
+                    </>
+                  )}
                 </div>
               </div>
             </motion.section>

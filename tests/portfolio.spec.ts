@@ -101,14 +101,14 @@ test("answers the primary client FAQ accessibly", async ({ page }) => {
 
   const faq = page.locator("#faq");
   await expect(faq.getByRole("heading", { name: "Frequently Asked Questions", level: 2 })).toBeVisible();
-  const question = faq.getByRole("button", { name: "Can you take my idea and build it into a production-ready product?" });
+  const question = faq.getByRole("button", { name: "Can you take my idea and build it into a production-ready product?", exact: true });
   await expect(question).toHaveAttribute("aria-expanded", "true");
   const answer = faq.getByRole("region", { name: "Can you take my idea and build it into a production-ready product?" });
   await expect(answer).toContainText("complete journey");
   await expect(answer).toContainText("Discover");
   await expect(faq.locator(".faq-item h3 > button")).toHaveCount(8);
 
-  const expandButton = answer.getByRole("button", { name: "Expand the idea-to-production delivery plan" });
+  const expandButton = answer.getByRole("button", { name: "Expand details for: Can you take my idea and build it into a production-ready product?" });
   await expect(expandButton).toHaveAttribute("aria-haspopup", "dialog");
   await expandButton.click();
 
@@ -117,20 +117,68 @@ test("answers the primary client FAQ accessibly", async ({ page }) => {
   await expect(detailDialog).toContainText("Five accountable stages");
   await expect(detailDialog).toContainText("Production release");
   await expect(page.locator("body")).toHaveCSS("overflow", "hidden");
-  await expect(detailDialog.getByRole("button", { name: "Close full delivery blueprint" })).toBeFocused();
+  await expect(detailDialog.getByRole("button", { name: "Close expanded FAQ details" })).toBeFocused();
 
   await page.keyboard.press("Escape");
   await expect(detailDialog).toHaveCount(0);
   await expect(expandButton).toBeFocused();
+
+  const technologyQuestion = faq.getByRole("button", { name: "What technologies do you specialize in?", exact: true });
+  await technologyQuestion.click();
+  const technologyAnswer = faq.getByRole("region", { name: "What technologies do you specialize in?" });
+  await expect(technologyAnswer).toContainText("Application");
+  await technologyAnswer.getByRole("button", { name: "Expand details for: What technologies do you specialize in?" }).click();
+  const technologyDialog = page.getByRole("dialog", { name: "The stack follows the product, not the trend." });
+  await expect(technologyDialog).toBeVisible();
+  await expect(technologyDialog).toContainText("Four questions before choosing a tool");
+  await expect(technologyDialog).toContainText("Product requirements");
+  await page.keyboard.press("Escape");
+  await expect(technologyDialog).toHaveCount(0);
+
+  const collaborationQuestion = faq.getByRole("button", { name: "How do you usually work with clients?", exact: true });
+  await collaborationQuestion.click();
+  const collaborationAnswer = faq.getByRole("region", { name: "How do you usually work with clients?" });
+  await expect(collaborationAnswer).toContainText("Review");
+  await collaborationAnswer.getByRole("button", { name: "Expand details for: How do you usually work with clients?" }).click();
+  const collaborationDialog = page.getByRole("dialog", { name: "You always know what is moving and what ships next." });
+  await expect(collaborationDialog).toBeVisible();
+  await expect(collaborationDialog).toContainText("Five visible collaboration stages");
+  await expect(collaborationDialog).toContainText("Feedback loop");
+  await page.keyboard.press("Escape");
+  await expect(collaborationDialog).toHaveCount(0);
+
+  const codebaseQuestion = faq.getByRole("button", { name: "Can you work with an existing project or codebase?", exact: true });
+  await codebaseQuestion.click();
+  const codebaseAnswer = faq.getByRole("region", { name: "Can you work with an existing project or codebase?" });
+  await expect(codebaseAnswer).toContainText("Stabilize");
+  await codebaseAnswer.getByRole("button", { name: "Expand details for: Can you work with an existing project or codebase?" }).click();
+  const codebaseDialog = page.getByRole("dialog", { name: "Improve the system without losing what already works." });
+  await expect(codebaseDialog).toBeVisible();
+  await expect(codebaseDialog).toContainText("Five stages before a confident release");
+  await expect(codebaseDialog).toContainText("Baseline protected");
+  await page.keyboard.press("Escape");
+  await expect(codebaseDialog).toHaveCount(0);
+
+  const fullStackQuestion = faq.getByRole("button", { name: "Can you handle both frontend and backend development?", exact: true });
+  await fullStackQuestion.click();
+  const fullStackAnswer = faq.getByRole("region", { name: "Can you handle both frontend and backend development?" });
+  await expect(fullStackAnswer).toContainText("Backend");
+  await fullStackAnswer.getByRole("button", { name: "Expand details for: Can you handle both frontend and backend development?" }).click();
+  const fullStackDialog = page.getByRole("dialog", { name: "One product journey, from interface to infrastructure." });
+  await expect(fullStackDialog).toBeVisible();
+  await expect(fullStackDialog).toContainText("One decision across every layer");
+  await expect(fullStackDialog).toContainText("Shared contracts");
+  await page.keyboard.press("Escape");
+  await expect(fullStackDialog).toHaveCount(0);
 
   const contactLink = faq.getByRole("link", { name: "Let's Talk" });
   await expect(contactLink).toHaveAttribute("href", /Project%20enquiry/);
   await contactLink.scrollIntoViewIfNeeded();
   await expect(contactLink).toBeVisible();
 
-  await question.click();
-  await expect(question).toHaveAttribute("aria-expanded", "false");
-  await expect(faq.getByRole("region", { name: "Can you take my idea and build it into a production-ready product?" })).toHaveCount(0);
+  await fullStackQuestion.click();
+  await expect(fullStackQuestion).toHaveAttribute("aria-expanded", "false");
+  await expect(faq.getByRole("region", { name: "Can you handle both frontend and backend development?" })).toHaveCount(0);
 
   await question.click();
   await expect(question).toHaveAttribute("aria-expanded", "true");
