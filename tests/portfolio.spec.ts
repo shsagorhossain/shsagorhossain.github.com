@@ -171,11 +171,50 @@ test("answers the primary client FAQ accessibly", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(fullStackDialog).toHaveCount(0);
 
+  const integrationsQuestion = faq.getByRole("button", { name: "Do you integrate third-party APIs and services?", exact: true });
+  await integrationsQuestion.click();
+  const integrationsAnswer = faq.getByRole("region", { name: "Do you integrate third-party APIs and services?" });
+  await expect(integrationsAnswer).toContainText("Connect");
+  await integrationsAnswer.getByRole("button", { name: "Expand details for: Do you integrate third-party APIs and services?" }).click();
+  const integrationsDialog = page.getByRole("dialog", { name: "External services should extend the product, not weaken it." });
+  await expect(integrationsDialog).toBeVisible();
+  await expect(integrationsDialog).toContainText("Five controls around every integration");
+  await expect(integrationsDialog).toContainText("Reliable boundaries");
+  await page.keyboard.press("Escape");
+  await expect(integrationsDialog).toHaveCount(0);
+
+  const deliveryQuestion = faq.getByRole("button", { name: "How do you approach project timelines and delivery?", exact: true });
+  await deliveryQuestion.click();
+  const deliveryAnswer = faq.getByRole("region", { name: "How do you approach project timelines and delivery?" });
+  await expect(deliveryAnswer).toContainText("milestones");
+  await deliveryAnswer.getByRole("button", { name: "Expand details for: How do you approach project timelines and delivery?" }).click();
+  const deliveryDialog = page.getByRole("dialog", { name: "Timelines built around decisions, not optimistic guesses." });
+  await expect(deliveryDialog).toBeVisible();
+  await expect(deliveryDialog).toContainText("Five stages from scope to release");
+  await expect(deliveryDialog).toContainText("Practical estimates");
+  await page.keyboard.press("Escape");
+  await expect(deliveryDialog).toHaveCount(0);
+
+  const kickoffQuestion = faq.getByRole("button", { name: "How can I start a project with you?", exact: true });
+  await kickoffQuestion.click();
+  const kickoffAnswer = faq.getByRole("region", { name: "How can I start a project with you?" });
+  await expect(kickoffAnswer).toContainText("short summary");
+  await kickoffAnswer.getByRole("button", { name: "Expand details for: How can I start a project with you?" }).click();
+  const kickoffDialog = page.getByRole("dialog", { name: "Starting a project should feel clear before it feels complicated." });
+  await expect(kickoffDialog).toBeVisible();
+  await expect(kickoffDialog).toContainText("Five low-friction steps to begin");
+  await expect(kickoffDialog).toContainText("A clear first step");
+  await page.keyboard.press("Escape");
+  await expect(kickoffDialog).toHaveCount(0);
+  await kickoffQuestion.click();
+  await expect(kickoffQuestion).toHaveAttribute("aria-expanded", "false");
+
   const contactLink = faq.getByRole("link", { name: "Let's Talk" });
   await expect(contactLink).toHaveAttribute("href", /Project%20enquiry/);
   await contactLink.scrollIntoViewIfNeeded();
   await expect(contactLink).toBeVisible();
 
+  await fullStackQuestion.click();
   await fullStackQuestion.click();
   await expect(fullStackQuestion).toHaveAttribute("aria-expanded", "false");
   await expect(faq.getByRole("region", { name: "Can you handle both frontend and backend development?" })).toHaveCount(0);

@@ -200,7 +200,78 @@ const fullStackOutputs = [
   { title: "One product owner", detail: "A single technical path remains accountable through production.", icon: Users },
 ];
 
-type FaqDetailId = "idea-to-production" | "technology-stack" | "client-process" | "existing-codebase" | "full-stack";
+const integrationStages = [
+  { number: "01", title: "Connect", detail: "Authentication and provider contracts", icon: PlugZap },
+  { number: "02", title: "Validate", detail: "Payloads, permissions, business rules", icon: ShieldCheck },
+  { number: "03", title: "Process", detail: "Idempotent actions and safe retries", icon: RefreshCw },
+  { number: "04", title: "Observe", detail: "Status, references, logs, alerts", icon: Activity },
+  { number: "05", title: "Recover", detail: "Fallback and support workflows", icon: Wrench },
+];
+
+const integrationSystems = [
+  { title: "Payments", detail: "Checkout and webhook events", icon: PackageCheck },
+  { title: "Messaging", detail: "WhatsApp, email, notifications", icon: MessageSquareText },
+  { title: "Data", detail: "Mapping, validation, persistence", icon: Database },
+  { title: "Operations", detail: "Logs, retries, and alerts", icon: Activity },
+];
+
+const integrationOutputs = [
+  { title: "Reliable boundaries", detail: "Authentication, validation, and failure handling are designed around each provider.", icon: ShieldCheck },
+  { title: "Traceable outcomes", detail: "Provider references and processing status remain visible when support needs them.", icon: Activity },
+  { title: "Recovery paths", detail: "Retries, fallbacks, and manual handling protect important business workflows.", icon: RefreshCw },
+];
+
+const timelineStages = [
+  { number: "01", title: "Scope", detail: "Goals, assumptions, priorities", icon: ClipboardCheck },
+  { number: "02", title: "Sequence", detail: "Dependencies and milestones", icon: Milestone },
+  { number: "03", title: "Build", detail: "Reviewable product increments", icon: Code2 },
+  { number: "04", title: "Quality", detail: "Review, test, and refine", icon: TestTube2 },
+  { number: "05", title: "Release", detail: "Launch and support handover", icon: Rocket },
+];
+
+const timelineSignals = [
+  { title: "Milestone", detail: "A reviewable piece of product", icon: Milestone },
+  { title: "Dependency", detail: "A decision that unlocks the next step", icon: GitBranch },
+  { title: "Risk", detail: "A concern surfaced while options remain", icon: ShieldCheck },
+  { title: "Release", detail: "A verified production outcome", icon: Rocket },
+];
+
+const timelineOutputs = [
+  { title: "Practical estimates", detail: "Timing follows confirmed scope, dependencies, and review cycles.", icon: CalendarClock },
+  { title: "Early risk signals", detail: "Blockers are visible before they become last-minute release pressure.", icon: Activity },
+  { title: "Release confidence", detail: "Review and quality checks are part of delivery, not an afterthought.", icon: CheckCircle2 },
+];
+
+const kickoffStages = [
+  { number: "01", title: "Share", detail: "Goal, users, and current context", icon: MessageSquareText },
+  { number: "02", title: "Clarify", detail: "Questions, constraints, priority", icon: Search },
+  { number: "03", title: "Shape", detail: "Scope, approach, next steps", icon: Compass },
+  { number: "04", title: "Agree", detail: "Milestones and responsibilities", icon: Handshake },
+  { number: "05", title: "Start", detail: "The first build decision", icon: Rocket },
+];
+
+const kickoffChecklist = [
+  { title: "Product goal", detail: "What should become easier or possible?", icon: Compass },
+  { title: "Target users", detail: "Who will use it, and in what context?", icon: Users },
+  { title: "Current material", detail: "Designs, code, examples, or references", icon: FileCheck2 },
+  { title: "Desired direction", detail: "Priority, timing, and next conversation", icon: Milestone },
+];
+
+const kickoffOutputs = [
+  { title: "A clear first step", detail: "The next decision becomes concrete and easy to act on.", icon: ArrowUpRight },
+  { title: "Useful questions", detail: "Unknowns surface before they turn into rework or hidden scope.", icon: Search },
+  { title: "A mutual plan", detail: "Scope, milestones, and responsibilities are visible to both sides.", icon: Handshake },
+];
+
+type FaqDetailId =
+  | "idea-to-production"
+  | "technology-stack"
+  | "client-process"
+  | "existing-codebase"
+  | "full-stack"
+  | "integrations"
+  | "delivery"
+  | "start-project";
 
 const detailMeta: Record<FaqDetailId, { index: string; label: string; titleId: string }> = {
   "idea-to-production": { index: "FAQ 01", label: "Product Delivery Blueprint", titleId: "idea-delivery-title" },
@@ -208,6 +279,9 @@ const detailMeta: Record<FaqDetailId, { index: string; label: string; titleId: s
   "client-process": { index: "FAQ 03", label: "Collaboration Workflow", titleId: "collaboration-detail-title" },
   "existing-codebase": { index: "FAQ 04", label: "Existing System Assessment", titleId: "codebase-detail-title" },
   "full-stack": { index: "FAQ 05", label: "Full-Stack System Map", titleId: "fullstack-detail-title" },
+  integrations: { index: "FAQ 06", label: "Integration Reliability Map", titleId: "integrations-detail-title" },
+  delivery: { index: "FAQ 07", label: "Delivery Timeline System", titleId: "delivery-detail-title" },
+  "start-project": { index: "FAQ 08", label: "Project Kickoff Path", titleId: "kickoff-detail-title" },
 };
 
 export function FaqExperience() {
@@ -328,7 +402,7 @@ export function FaqExperience() {
         <div className="faq-list" aria-label="Frequently asked questions">
           {faqItems.map((item, index) => {
             const isOpen = openItem === item.id;
-            const hasExpandedDetail = index < 5;
+            const hasExpandedDetail = index < 8;
             const buttonId = `faq-button-${item.id}`;
             const panelId = `faq-panel-${item.id}`;
 
@@ -437,6 +511,39 @@ export function FaqExperience() {
                         {item.id === "full-stack" && (
                           <div className="faq-answer-mini-flow is-fullstack" aria-label="Full-stack system layers">
                             {fullStackLayers.map(({ title, icon: Icon }) => (
+                              <span key={title}>
+                                <i><Icon size={13} /></i>
+                                <b>{title}</b>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {item.id === "integrations" && (
+                          <div className="faq-answer-mini-flow is-integrations" aria-label="Third-party integration controls">
+                            {integrationStages.map(({ title, icon: Icon }) => (
+                              <span key={title}>
+                                <i><Icon size={13} /></i>
+                                <b>{title}</b>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {item.id === "delivery" && (
+                          <div className="faq-answer-mini-flow is-delivery" aria-label="Project delivery stages">
+                            {timelineStages.map(({ title, icon: Icon }) => (
+                              <span key={title}>
+                                <i><Icon size={13} /></i>
+                                <b>{title}</b>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {item.id === "start-project" && (
+                          <div className="faq-answer-mini-flow is-kickoff" aria-label="Project kickoff stages">
+                            {kickoffStages.map(({ title, icon: Icon }) => (
                               <span key={title}>
                                 <i><Icon size={13} /></i>
                                 <b>{title}</b>
@@ -1027,6 +1134,325 @@ export function FaqExperience() {
                         <a href="mailto:shsagor.11s@gmail.com?subject=Full-stack%20product%20enquiry">
                           Discuss your product system
                           <ArrowUpRight size={17} />
+                        </a>
+                      </section>
+                    </>
+                  )}
+
+                  {detailOpen === "integrations" && (
+                    <>
+                      <section className="faq-detail-hero faq-integrations-hero">
+                        <motion.div
+                          className="faq-detail-copy"
+                          initial={reduceMotion ? false : { opacity: 0, x: -22 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: reduceMotion ? 0 : 0.16, duration: 0.5 }}
+                        >
+                          <span className="faq-detail-kicker"><i />Reliable connections, deliberate recovery</span>
+                          <h2 id="integrations-detail-title">External services should extend the product, not weaken it.</h2>
+                          <p>I treat every third-party API as a system boundary. Authentication, payload validation, provider limits, duplicate events, timeouts, and support visibility are designed together so an integration remains dependable after the happy-path demo.</p>
+                          <div className="faq-detail-principles" aria-label="Integration reliability principles">
+                            <span><CheckCircle2 size={15} />Validated provider contracts</span>
+                            <span><CheckCircle2 size={15} />Safe retries and idempotency</span>
+                            <span><CheckCircle2 size={15} />Visible operational status</span>
+                          </div>
+                        </motion.div>
+
+                        <motion.div
+                          className="faq-detail-system faq-integrations-board"
+                          aria-label="Third-party integration reliability map"
+                          initial={reduceMotion ? false : { opacity: 0, x: 24 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: reduceMotion ? 0 : 0.22, duration: 0.55 }}
+                        >
+                          <header>
+                            <span>Integration control plane</span>
+                            <strong><i />Connected and observable</strong>
+                          </header>
+                          <div className="faq-integrations-map">
+                            <motion.div
+                              className="faq-integration-source"
+                              animate={reduceMotion ? undefined : { scale: [1, 1.025, 1] }}
+                              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                              <PlugZap size={20} />
+                              <div><b>Product request</b><small>Identity, intent, payload</small></div>
+                            </motion.div>
+                            <div className="faq-integration-service-grid">
+                              {integrationSystems.map(({ title, detail, icon: Icon }, index) => (
+                                <motion.article
+                                  key={title}
+                                  initial={reduceMotion ? false : { opacity: 0, scale: 0.94 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: reduceMotion ? 0 : 0.32 + index * 0.07, duration: 0.4 }}
+                                >
+                                  <span>{String(index + 1).padStart(2, "0")}</span>
+                                  <Icon size={19} />
+                                  <div><b>{title}</b><small>{detail}</small></div>
+                                </motion.article>
+                              ))}
+                            </div>
+                            <div className="faq-integration-lane">
+                              <span><ShieldCheck size={14} />Validated</span>
+                              <i /><i /><i />
+                              <span><Activity size={14} />Observed</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      </section>
+
+                      <section className="faq-detail-process" aria-labelledby="integrations-process-title">
+                        <div className="faq-detail-section-heading">
+                          <div>
+                            <span>Reliability controls</span>
+                            <h3 id="integrations-process-title">Five controls around every integration</h3>
+                          </div>
+                          <p>The provider call is only one step. The surrounding controls keep customer and business workflows trustworthy.</p>
+                        </div>
+                        <div className="faq-detail-stage-grid faq-integration-stage-grid">
+                          {integrationStages.map(({ number, title, detail, icon: Icon }, index) => (
+                            <motion.article
+                              key={title}
+                              initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: reduceMotion ? 0 : 0.28 + index * 0.07, duration: 0.42 }}
+                            >
+                              <header><span>{number}</span><Icon size={19} /></header>
+                              <h4>{title}</h4>
+                              <p>{detail}</p>
+                            </motion.article>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="faq-detail-outcomes" aria-labelledby="integrations-outcomes-title">
+                        <div>
+                          <span>What this protects</span>
+                          <h3 id="integrations-outcomes-title">Business workflows that remain explainable when providers fail.</h3>
+                        </div>
+                        <div className="faq-detail-output-grid">
+                          {integrationOutputs.map(({ title, detail, icon: Icon }) => (
+                            <article key={title}>
+                              <Icon size={20} />
+                              <div><strong>{title}</strong><p>{detail}</p></div>
+                            </article>
+                          ))}
+                        </div>
+                        <a href="mailto:shsagor.11s@gmail.com?subject=Third-party%20integration%20enquiry">
+                          Review an integration plan
+                          <ArrowUpRight size={17} />
+                        </a>
+                      </section>
+                    </>
+                  )}
+
+                  {detailOpen === "delivery" && (
+                    <>
+                      <section className="faq-detail-hero faq-timeline-hero">
+                        <motion.div
+                          className="faq-detail-copy"
+                          initial={reduceMotion ? false : { opacity: 0, x: -22 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: reduceMotion ? 0 : 0.16, duration: 0.5 }}
+                        >
+                          <span className="faq-detail-kicker"><i />Milestones with visible evidence</span>
+                          <h2 id="delivery-detail-title">Timelines built around decisions, not optimistic guesses.</h2>
+                          <p>A useful schedule begins after the important scope and dependencies are understood. I organize delivery into reviewable milestones, make risks visible early, and include feedback and quality checks in the plan instead of squeezing them in before launch.</p>
+                          <div className="faq-detail-principles" aria-label="Project timeline principles">
+                            <span><CheckCircle2 size={15} />Evidence-based estimates</span>
+                            <span><CheckCircle2 size={15} />Reviewable milestones</span>
+                            <span><CheckCircle2 size={15} />Risks communicated early</span>
+                          </div>
+                        </motion.div>
+
+                        <motion.div
+                          className="faq-detail-system faq-timeline-board"
+                          aria-label="Milestone-based delivery timeline"
+                          initial={reduceMotion ? false : { opacity: 0, x: 24 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: reduceMotion ? 0 : 0.22, duration: 0.55 }}
+                        >
+                          <header>
+                            <span>Delivery timeline</span>
+                            <strong><i />Milestone 02 in review</strong>
+                          </header>
+                          <div className="faq-timeline-map">
+                            <div className="faq-timeline-track">
+                              {timelineStages.map(({ number, title, icon: Icon }, index) => (
+                                <motion.article
+                                  className={index < 2 ? "is-complete" : index === 2 ? "is-active" : undefined}
+                                  key={title}
+                                  initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: reduceMotion ? 0 : 0.3 + index * 0.08, duration: 0.4 }}
+                                >
+                                  <span>{number}</span>
+                                  <i><Icon size={18} /></i>
+                                  <b>{title}</b>
+                                </motion.article>
+                              ))}
+                            </div>
+                            <div className="faq-timeline-signal-grid">
+                              {timelineSignals.map(({ title, detail, icon: Icon }) => (
+                                <article key={title}><Icon size={16} /><div><b>{title}</b><small>{detail}</small></div></article>
+                              ))}
+                            </div>
+                            <div className="faq-timeline-release">
+                              <CalendarClock size={17} />
+                              <span><b>Next checkpoint</b><small>Working build, decisions, updated forecast</small></span>
+                              <i /><i /><i />
+                            </div>
+                          </div>
+                        </motion.div>
+                      </section>
+
+                      <section className="faq-detail-process" aria-labelledby="timeline-process-title">
+                        <div className="faq-detail-section-heading">
+                          <div>
+                            <span>Delivery rhythm</span>
+                            <h3 id="timeline-process-title">Five stages from scope to release</h3>
+                          </div>
+                          <p>Every stage produces evidence for the next one, so timing can become more precise as the product becomes more real.</p>
+                        </div>
+                        <div className="faq-detail-stage-grid faq-timeline-stage-grid">
+                          {timelineStages.map(({ number, title, detail, icon: Icon }, index) => (
+                            <motion.article
+                              key={title}
+                              initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: reduceMotion ? 0 : 0.28 + index * 0.07, duration: 0.42 }}
+                            >
+                              <header><span>{number}</span><Icon size={19} /></header>
+                              <h4>{title}</h4>
+                              <p>{detail}</p>
+                            </motion.article>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="faq-detail-outcomes" aria-labelledby="timeline-outcomes-title">
+                        <div>
+                          <span>What you can expect</span>
+                          <h3 id="timeline-outcomes-title">A schedule you can understand, inspect, and act on.</h3>
+                        </div>
+                        <div className="faq-detail-output-grid">
+                          {timelineOutputs.map(({ title, detail, icon: Icon }) => (
+                            <article key={title}>
+                              <Icon size={20} />
+                              <div><strong>{title}</strong><p>{detail}</p></div>
+                            </article>
+                          ))}
+                        </div>
+                        <a href="mailto:shsagor.11s@gmail.com?subject=Project%20timeline%20enquiry">
+                          Plan a delivery timeline
+                          <ArrowUpRight size={17} />
+                        </a>
+                      </section>
+                    </>
+                  )}
+
+                  {detailOpen === "start-project" && (
+                    <>
+                      <section className="faq-detail-hero faq-kickoff-hero">
+                        <motion.div
+                          className="faq-detail-copy"
+                          initial={reduceMotion ? false : { opacity: 0, x: -22 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: reduceMotion ? 0 : 0.16, duration: 0.5 }}
+                        >
+                          <span className="faq-detail-kicker"><i />A useful first conversation</span>
+                          <h2 id="kickoff-detail-title">Starting a project should feel clear before it feels complicated.</h2>
+                          <p>You do not need a perfect specification to begin. Share the product goal, who it serves, what already exists, and what matters most. I will turn that context into focused questions and a practical next step without forcing premature commitments.</p>
+                          <div className="faq-detail-principles" aria-label="Project kickoff principles">
+                            <span><CheckCircle2 size={15} />A short brief is enough</span>
+                            <span><CheckCircle2 size={15} />Unknowns become questions</span>
+                            <span><CheckCircle2 size={15} />Next steps stay explicit</span>
+                          </div>
+                        </motion.div>
+
+                        <motion.div
+                          className="faq-detail-system faq-kickoff-board"
+                          aria-label="Project kickoff preparation map"
+                          initial={reduceMotion ? false : { opacity: 0, x: 24 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: reduceMotion ? 0 : 0.22, duration: 0.55 }}
+                        >
+                          <header>
+                            <span>Project brief</span>
+                            <strong><i />Ready for conversation</strong>
+                          </header>
+                          <div className="faq-kickoff-map">
+                            <motion.div
+                              className="faq-kickoff-message"
+                              animate={reduceMotion ? undefined : { y: [0, -3, 0] }}
+                              transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                              <MessageSquareText size={20} />
+                              <div><b>Start with context</b><small>A few useful details, not a perfect specification</small></div>
+                            </motion.div>
+                            <div className="faq-kickoff-checklist">
+                              {kickoffChecklist.map(({ title, detail, icon: Icon }, index) => (
+                                <motion.article
+                                  key={title}
+                                  initial={reduceMotion ? false : { opacity: 0, scale: 0.94 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: reduceMotion ? 0 : 0.32 + index * 0.07, duration: 0.4 }}
+                                >
+                                  <span><Icon size={18} /></span>
+                                  <div><b>{title}</b><small>{detail}</small></div>
+                                  <CheckCircle2 size={14} />
+                                </motion.article>
+                              ))}
+                            </div>
+                            <div className="faq-kickoff-next">
+                              <Handshake size={17} />
+                              <span><b>Clear next step</b><small>Scope, discovery, or technical review</small></span>
+                              <ArrowUpRight size={16} />
+                            </div>
+                          </div>
+                        </motion.div>
+                      </section>
+
+                      <section className="faq-detail-process" aria-labelledby="kickoff-process-title">
+                        <div className="faq-detail-section-heading">
+                          <div>
+                            <span>From message to momentum</span>
+                            <h3 id="kickoff-process-title">Five low-friction steps to begin</h3>
+                          </div>
+                          <p>The first exchange turns uncertainty into a shared direction without pretending every detail is already known.</p>
+                        </div>
+                        <div className="faq-detail-stage-grid faq-kickoff-stage-grid">
+                          {kickoffStages.map(({ number, title, detail, icon: Icon }, index) => (
+                            <motion.article
+                              key={title}
+                              initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: reduceMotion ? 0 : 0.28 + index * 0.07, duration: 0.42 }}
+                            >
+                              <header><span>{number}</span><Icon size={19} /></header>
+                              <h4>{title}</h4>
+                              <p>{detail}</p>
+                            </motion.article>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="faq-detail-outcomes" aria-labelledby="kickoff-outcomes-title">
+                        <div>
+                          <span>What the first step creates</span>
+                          <h3 id="kickoff-outcomes-title">Enough clarity to move forward with confidence.</h3>
+                        </div>
+                        <div className="faq-detail-output-grid">
+                          {kickoffOutputs.map(({ title, detail, icon: Icon }) => (
+                            <article key={title}>
+                              <Icon size={20} />
+                              <div><strong>{title}</strong><p>{detail}</p></div>
+                            </article>
+                          ))}
+                        </div>
+                        <a href="mailto:shsagor.11s@gmail.com?subject=New%20project%20enquiry">
+                          Start the conversation
+                          <Send size={17} />
                         </a>
                       </section>
                     </>
