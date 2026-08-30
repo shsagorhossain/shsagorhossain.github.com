@@ -242,11 +242,12 @@ test("scrolls through the featured projects and reaches the project index card",
   await page.goto("/");
 
   const track = page.locator(".project-track");
-  await expect(track.locator(".project-card")).toHaveCount(6);
+  await expect(track.locator(".project-card")).toHaveCount(7);
   await expect(track.locator(".project-card h3")).toHaveText([
     "Zappilo - AI Communication Platform",
     "One Lifestyle BD - E-Commerce Platform",
     "BounceZip - Email Verification Platform",
+    "LeadsFriday - B2B Lead Generation Platform",
     "MSL Lab - Staff Operations Platform",
     "Mohuls - Business Software Ecosystem",
     "Personal Cost Management System",
@@ -283,6 +284,23 @@ test("scrolls through the featured projects and reaches the project index card",
   await indexLink.click();
   await expect(page).toHaveURL(/\/projects\/$/);
   await expect(page.getByRole("heading", { name: "All Projects" })).toBeVisible();
+});
+
+test("opens the LeadsFriday project case study", async ({ page }) => {
+  await page.goto("/projects/leadsfriday/");
+
+  await expect(page.getByRole("heading", { name: "LeadsFriday", level: 1 })).toBeVisible();
+  await expect(page.getByText("A lead generation platform built to move from targeted discovery to usable outreach data.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Visit live product" })).toHaveAttribute("href", "https://app.leadsfriday.com");
+  await expect(page.getByRole("img", { name: "LeadsFriday live product entry screen", exact: true })).toHaveCount(1);
+  await expect(page.locator("img[alt*='LeadsFriday live']")).toHaveCount(4);
+  await expect(page.getByRole("heading", { name: "One workspace for the work around a lead." })).toBeVisible();
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
 });
 
 test("shows one featured insight and supports manual carousel navigation", async ({ page }) => {
