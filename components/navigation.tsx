@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { ArrowUpRight, Menu, X } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
+import { useReducedMotionPreference } from "@/hooks/use-reduced-motion-preference";
 
 const links = [
   { label: "Home", href: "#home" },
@@ -18,7 +19,7 @@ const links = [
 ];
 
 export function Navigation() {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotionPreference();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("home");
 

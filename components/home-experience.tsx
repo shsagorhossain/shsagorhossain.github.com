@@ -31,11 +31,11 @@ import {
   motion,
   useInView,
   useMotionValue,
-  useReducedMotion,
   useScroll,
   useSpring,
   useTransform,
 } from "motion/react";
+import { useReducedMotionPreference } from "@/hooks/use-reduced-motion-preference";
 
 const stats = [
   { value: 2, suffix: "+", label: "Years Experience", icon: Code2, tone: "blue" },
@@ -88,7 +88,7 @@ export function HomeScrollProgress() {
 }
 
 export function HomeHero() {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotionPreference();
   const heroRef = useRef<HTMLElement>(null);
   const heroInView = useInView(heroRef, { margin: "220px 0px" });
   const tiltX = useMotionValue(0);
@@ -224,7 +224,7 @@ export function HomeHero() {
 }
 
 function AnimatedStat({ value, suffix, label, tone, icon: Icon, index }: (typeof stats)[number] & { index: number }) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotionPreference();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-8%" });
   const [displayValue, setDisplayValue] = useState(0);
@@ -271,7 +271,7 @@ export function HomeStats() {
 }
 
 export function HomeSection({ children, className, id }: { children: ReactNode; className: string; id: string }) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotionPreference();
 
   return (
     <motion.section
@@ -288,7 +288,7 @@ export function HomeSection({ children, className, id }: { children: ReactNode; 
 }
 
 export function HomeReveal({ children, className }: { children: ReactNode; className?: string }) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotionPreference();
 
   return (
     <motion.div
@@ -304,7 +304,7 @@ export function HomeReveal({ children, className }: { children: ReactNode; class
 }
 
 export function HomeContactBanner() {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotionPreference();
   const contactRef = useRef<HTMLElement>(null);
   const contactInView = useInView(contactRef, { margin: "220px 0px" });
 

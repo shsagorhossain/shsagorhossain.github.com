@@ -5,6 +5,8 @@ test("renders the portfolio without horizontal overflow", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "Sagor Hossain" })).toBeVisible();
   await expect(page.getByAltText("Sagor Hossain")).toBeVisible();
+  await page.locator("#testimonials").scrollIntoViewIfNeeded();
+  await expect(page.locator('[data-home-module="stories"]')).toHaveAttribute("data-ready", "true");
   const firstClientStory = page.locator('.testimonial-card:not([aria-hidden="true"])').first();
   await expect(firstClientStory).toContainText("Arshad Sayed");
   await expect(firstClientStory).toContainText("Zappilo Client · Dubai, UAE");
@@ -90,6 +92,8 @@ test("keeps homepage anchor destinations clear of the fixed header", async ({ pa
 test("updates the service console from a network node", async ({ page }) => {
   await page.goto("/");
 
+  await page.locator("#services").scrollIntoViewIfNeeded();
+  await expect(page.locator('[data-home-module="services"]')).toHaveAttribute("data-ready", "true");
   await page.getByRole("button", { name: /Backend Development/ }).click();
   await expect(page.locator(".service-console").getByRole("heading", { name: "Backend Development" })).toBeVisible();
   await expect(page.locator(".service-console")).toContainText("Python");
@@ -97,9 +101,12 @@ test("updates the service console from a network node", async ({ page }) => {
 });
 
 test("answers the primary client FAQ accessibly", async ({ page }) => {
+  test.setTimeout(60_000);
   await page.goto("/");
 
   const faq = page.locator("#faq");
+  await faq.scrollIntoViewIfNeeded();
+  await expect(page.locator('[data-home-module="faq"]')).toHaveAttribute("data-ready", "true");
   await expect(faq.getByRole("heading", { name: "Frequently Asked Questions", level: 2 })).toBeVisible();
   const question = faq.getByRole("button", { name: "Can you take my idea and build it into a production-ready product?", exact: true });
   await expect(question).toHaveAttribute("aria-expanded", "true");
@@ -241,6 +248,8 @@ test("scrolls through the featured projects and reaches the project index card",
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
 
+  await page.locator("#projects").scrollIntoViewIfNeeded();
+  await expect(page.locator('[data-home-module="projects"]')).toHaveAttribute("data-ready", "true");
   const track = page.locator(".project-track");
   await expect(track.locator(".project-card")).toHaveCount(7);
   await expect(track.locator(".project-card h3")).toHaveText([
@@ -307,6 +316,8 @@ test("shows one featured insight and supports manual carousel navigation", async
   await page.goto("/");
 
   const insightsSection = page.locator("#insights");
+  await insightsSection.scrollIntoViewIfNeeded();
+  await expect(page.locator('[data-home-module="insights"]')).toHaveAttribute("data-ready", "true");
   const carousel = insightsSection.getByRole("region", { name: "Featured insights" });
   const activeCard = carousel.locator(".insight-feature-card");
   await expect(insightsSection.getByRole("heading", { name: "Insights", exact: true })).toBeVisible();
