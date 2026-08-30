@@ -17,7 +17,7 @@ import {
   Search,
   Sparkles,
 } from "lucide-react";
-import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { insightCategoryIcons } from "@/components/insight-category-icons";
 import {
   getInsightCategory,
@@ -103,9 +103,9 @@ function chooseRandomInsights() {
 export function InsightsShowcase() {
   const carouselRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
-  const isInView = useInView(carouselRef, { margin: "220px 0px" });
   const [curatedInsights, setCuratedInsights] = useState(() => featuredInsights.slice(0, CURATED_INSIGHT_COUNT));
   const [selectionReady, setSelectionReady] = useState(false);
+  const [isInView, setIsInView] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(() => new Set());
   const [turnSide, setTurnSide] = useState<CubeTurnSide>("right");
@@ -157,6 +157,19 @@ export function InsightsShowcase() {
 
     return () => window.cancelAnimationFrame(frame);
   }, []);
+
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!selectionReady || !carousel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInView(entry?.isIntersecting ?? false),
+      { rootMargin: "220px 0px" },
+    );
+
+    observer.observe(carousel);
+    return () => observer.disconnect();
+  }, [selectionReady]);
 
   useEffect(() => {
     if (!shouldAutoRotate || totalSlides < 2) return;

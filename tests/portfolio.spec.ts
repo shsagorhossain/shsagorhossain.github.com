@@ -325,7 +325,7 @@ test("shows one featured insight and supports manual carousel navigation", async
   await expect(insightsSection.locator(".insight-category-icon svg")).toHaveCount(10);
   await expect(activeCard).toHaveCount(1);
   await expect(insightsSection).toContainText("Software Engineering");
-  await expect(insightsSection).toContainText("10 Published");
+  await expect(insightsSection).toContainText("12 Published");
   await expect(carousel.locator(".insight-carousel-pages button")).toHaveCount(6);
   await expect(carousel.locator(".insight-carousel-count")).toHaveCount(0);
   await expect(carousel).toHaveAttribute("data-slide-kind", "insight");
@@ -426,12 +426,14 @@ test("keeps the homepage insight skeleton visible until its image loads", async 
 test("automatically rotates featured insights and can be paused", async ({ page }) => {
   await page.goto("/");
 
+  await page.locator("#insights").scrollIntoViewIfNeeded();
+  await expect(page.locator('[data-home-module="insights"]')).toHaveAttribute("data-ready", "true");
   const carousel = page.getByRole("region", { name: "Featured insights" });
   await carousel.scrollIntoViewIfNeeded();
   await page.waitForTimeout(200);
 
   const initialSlug = await carousel.getAttribute("data-active-insight");
-  await expect.poll(() => carousel.getAttribute("data-active-insight"), { timeout: 5000 }).not.toBe(initialSlug);
+  await expect.poll(() => carousel.getAttribute("data-active-insight"), { timeout: 7000 }).not.toBe(initialSlug);
 
   await carousel.getByRole("button", { name: "Pause insight rotation" }).click();
   await expect(carousel.getByRole("button", { name: "Play insight rotation" })).toBeVisible();
@@ -443,6 +445,8 @@ test("automatically rotates featured insights and can be paused", async ({ page 
 test("ends the homepage insight selection with a complete index invitation", async ({ page }) => {
   await page.goto("/");
 
+  await page.locator("#insights").scrollIntoViewIfNeeded();
+  await expect(page.locator('[data-home-module="insights"]')).toHaveAttribute("data-ready", "true");
   const carousel = page.getByRole("region", { name: "Featured insights" });
   await carousel.scrollIntoViewIfNeeded();
   await carousel.getByRole("button", { name: "Pause insight rotation" }).click();
@@ -453,7 +457,7 @@ test("ends the homepage insight selection with a complete index invitation", asy
   await expect(carousel.getByRole("heading", { name: "This five-note selection ends here.", level: 3 })).toBeVisible();
   await expect(carousel).toContainText("End of curated selection");
   await expect(carousel).toContainText("05 / 05");
-  await expect(carousel).toContainText("all 10 engineering notes");
+  await expect(carousel).toContainText("all 12 engineering notes");
   await expect(carousel.locator(".insight-index-end-orbit svg")).toHaveCount(3);
   await expect(carousel.locator(".insight-index-end-art img")).toBeVisible();
   await expect(carousel.getByRole("link", { name: "Enter the Insights Index", exact: true })).toHaveAttribute("href", "/insights/");
@@ -478,15 +482,15 @@ test("browses, filters, and opens the dedicated Insights Index", async ({ page }
   await page.reload();
   await expect(spotlight).toHaveAttribute("data-spotlight-ready", "true");
   await expect(spotlight).not.toHaveAttribute("data-spotlight-insight", firstSpotlight!);
-  await expect(page.getByText("10", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("12", { exact: true }).first()).toBeVisible();
   await expect(page.getByRole("complementary", { name: "Filter insights by category" }).getByRole("button")).toHaveCount(11);
 
   const indexPanel = page.locator("[data-view-mode]");
   const articles = page.locator("main article");
-  await expect(indexPanel).toHaveAttribute("data-result-count", "10");
-  await expect(articles).toHaveCount(10);
+  await expect(indexPanel).toHaveAttribute("data-result-count", "12");
+  await expect(articles).toHaveCount(12);
   const readActions = articles.getByRole("link", { name: "Read Insight", exact: true });
-  await expect(readActions).toHaveCount(10);
+  await expect(readActions).toHaveCount(12);
   const actionWidthRatios = await readActions.evaluateAll((links) => links.map((link) => {
     const footer = link.closest("footer");
     return footer ? link.getBoundingClientRect().width / footer.getBoundingClientRect().width : 0;
@@ -505,7 +509,7 @@ test("browses, filters, and opens the dedicated Insights Index", async ({ page }
   await expect(page.getByRole("heading", { name: "No notes found in this lane" })).toBeVisible();
 
   await page.getByRole("button", { name: "Reset index" }).last().click();
-  await expect(indexPanel).toHaveAttribute("data-result-count", "10");
+  await expect(indexPanel).toHaveAttribute("data-result-count", "12");
   await page.getByRole("button", { name: "List view" }).click();
   await expect(indexPanel).toHaveAttribute("data-view-mode", "list");
 
@@ -744,6 +748,52 @@ test("opens the practical full-stack testing insight", async ({ page }) => {
   await expect(page.getByAltText("Analog film-editing table mapping one six-step checkout browser journey and focused branches for declined cards, double clicks, API timeouts, and expired sessions")).toBeVisible();
   await expect(page.locator("main article").getByRole("listitem")).toHaveCount(9);
   await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(10);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the intentional responsive interfaces insight", async ({ page }) => {
+  await page.goto("/insights/designing-responsive-interfaces-that-feel-intentional-at-every-breakpoint/");
+
+  await expect(page.getByRole("heading", { name: "Designing Responsive Interfaces That Feel Intentional at Every Breakpoint", level: 1 })).toBeVisible();
+  await expect(page.getByText("June 12, 2026")).toBeVisible();
+  await expect(page.getByText("11 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight Frontend Development");
+  await expect(page.getByAltText("A physical interface system composed across mobile, tablet, laptop, and wide desktop frames on a design workbench")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Let components respond to their context" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Stress-test the composition before calling it complete" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A responsive interface review" })).toBeVisible();
+  await expect(page.getByAltText("A hand-drawn blueprint showing one interface reorganized through wide, medium, and narrow containers")).toBeVisible();
+  await expect(page.getByAltText("A handmade editorial test board examining interface layouts, long content, touch targets, image crops, and multiple screen proportions")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(9);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the practical Next.js performance playbook", async ({ page }) => {
+  await page.goto("/insights/performance-is-user-experience-a-practical-nextjs-optimization-playbook/");
+
+  await expect(page.getByRole("heading", { name: "Performance Is User Experience: A Practical Next.js Optimization Playbook", level: 1 })).toBeVisible();
+  await expect(page.getByText("October 16, 2025")).toBeVisible();
+  await expect(page.getByText("12 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight Frontend Development");
+  await expect(page.getByAltText("A web page assembled as a precision machine with measured assets traveling along copper delivery paths")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Keep the client boundary deliberately small" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Give the critical route the shortest journey" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A practical Next.js performance review" })).toBeVisible();
+  await expect(page.getByAltText("A letterpress transit diagram showing essential page resources on a direct route and optional work branching into deferred paths")).toBeVisible();
+  await expect(page.getByAltText("A handcrafted miniature workshop measuring a page, adjusting its assets, and verifying the improved interface")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
 
   const sizes = await page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,

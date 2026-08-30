@@ -1153,6 +1153,217 @@ export const insights: InsightPost[] = [
       },
     ],
   },
+  {
+    slug: "designing-responsive-interfaces-that-feel-intentional-at-every-breakpoint",
+    title: "Designing Responsive Interfaces That Feel Intentional at Every Breakpoint",
+    excerpt:
+      "A practical approach to responsive design that protects content hierarchy, interaction quality, and visual character instead of merely shrinking a desktop layout.",
+    lead:
+      "A responsive interface should not feel like one design being squeezed through a series of smaller rectangles. It should feel composed for the space it has. That requires decisions about priority, rhythm, interaction, and content long before the first media query is written.",
+    categoryId: "frontend-development",
+    image: "/insights/responsive-interfaces-breakpoints.webp",
+    imageAlt: "A physical interface system composed across mobile, tablet, laptop, and wide desktop frames on a design workbench",
+    author: "Sagor Hossain",
+    publishedAt: "2026-06-12",
+    readTime: "11 min read",
+    tags: ["Responsive Design", "CSS", "Accessibility"],
+    featured: true,
+    sections: [
+      {
+        heading: "Responsive design is a hierarchy problem",
+        paragraphs: [
+          "Teams often begin responsive work by collecting device widths. That is useful for testing, but it is a weak foundation for design. The real question is what a person needs to understand and do when the available space changes. A checkout still needs a trustworthy total on a narrow screen. An operations dashboard still needs to reveal urgency when half its columns no longer fit. The layout is successful when those priorities survive the transition.",
+          "I begin by naming the primary action, the information that supports it, and the details that can wait. This creates a hierarchy that can be expressed in several compositions. Without that agreement, the mobile version becomes a long stack of everything the desktop happened to contain, and the wide version becomes empty space filled with larger type. Neither result is truly responsive because neither responds to the user's task.",
+        ],
+      },
+      {
+        heading: "Start with content before arranging containers",
+        paragraphs: [
+          "Real content exposes layout decisions that placeholder rectangles conceal. A short English heading may fit beside an action while a translated heading wraps to three lines. A customer name may be longer than the example in the design file. A product image can be portrait, landscape, or missing. I use representative content early, including awkward values, because it tells us where the interface must be flexible and where a product rule should set a limit.",
+          "Content-first does not mean every possible sentence receives unlimited space. It means truncation, disclosure, wrapping, and ordering are deliberate decisions. A card title may wrap to two lines while its metadata remains visible. A table may preserve the columns needed to compare records and move secondary fields into an expandable detail row. The important behavior is written down before CSS makes the choice accidentally.",
+        ],
+      },
+      {
+        heading: "Design states, not three isolated screenshots",
+        paragraphs: [
+          "Desktop, tablet, and mobile frames are useful review points, but the web exists between them. A layout that works at 1440, 768, and 390 pixels can still break at 1030 or inside a narrow application panel. I treat the design as a set of rules: when can two regions sit together, what is their minimum useful width, which item should grow, and what happens when the content no longer fits?",
+          "This shifts breakpoint decisions away from popular device numbers. A breakpoint belongs where the composition stops working. CSS Grid, flex wrapping, minmax(), clamp(), and intrinsic sizing can cover a large range without intervention. A media or container query then marks a meaningful change in composition, such as replacing a persistent sidebar with a drawer or moving an action group below the content it controls.",
+        ],
+        visual: {
+          src: "/insights/responsive-component-blueprint.webp",
+          alt: "A hand-drawn blueprint showing one interface reorganized through wide, medium, and narrow containers",
+          label: "Rules between frames",
+          caption:
+            "A responsive specification describes how hierarchy, media, copy, and actions reorganize across available space. The named frames are checkpoints; the rules between them are the actual design.",
+        },
+      },
+      {
+        heading: "Let components respond to their context",
+        paragraphs: [
+          "Viewport queries are appropriate for page-level decisions, but reusable components often know more about their container than the browser window. The same project summary might appear in a three-column grid, a sidebar, and a full-width search result. If it only listens to viewport width, it can choose a horizontal layout while living inside a narrow column. Container queries let the component respond to the space it actually receives.",
+          "I keep those responses close to the component and expose a small number of meaningful variants. A compact summary can reduce supporting metadata and place its action in an overflow menu. A roomy summary can reveal the owner, status, and progress together. This is more dependable than a collection of parent selectors and one-off overrides, and it gives design systems components that remain useful in new compositions.",
+        ],
+      },
+      {
+        heading: "Change interaction when the input changes",
+        paragraphs: [
+          "Responsive work is not only visual. Hover is not a dependable instruction on a touch device, a tiny icon target remains difficult even when it technically fits, and a dense drag interaction may need a simpler alternative for keyboard and narrow-screen users. The interface should preserve the outcome while allowing the interaction to change.",
+          "Navigation is a common example. Moving desktop links into a mobile panel is only the beginning. The trigger needs a clear state, focus should enter and leave the panel predictably, the current destination should remain visible, and background content should not compete with the open menu. For data-heavy tools, a table can become a focused list or provide controlled horizontal scrolling, but important labels and actions must remain understandable without a mouse.",
+        ],
+      },
+      {
+        heading: "Build a shared rhythm for type, space, and media",
+        paragraphs: [
+          "A layout feels coherent when its parts change at compatible rates. If type becomes small immediately while spacing and images remain generous, the composition feels disconnected. If every measurement scales continuously, controls can become strangely large on wide screens. I use a limited type scale, a spacing scale, and a few fluid values for elements that genuinely benefit from interpolation.",
+          "Media needs an equally deliberate contract. Stable aspect ratios prevent content from jumping while images load, art direction can protect the subject when a crop changes, and object positioning should follow the meaning of the image rather than defaulting to its center. Decorative media can yield on a narrow screen. Product imagery, diagrams, and interface evidence usually cannot, because people need to inspect what they show.",
+        ],
+      },
+      {
+        heading: "Stress-test the composition before calling it complete",
+        paragraphs: [
+          "My responsive review includes more than dragging the browser edge. I test long names, empty states, validation messages, permission differences, localization, browser zoom, reduced motion, coarse pointers, keyboard navigation, and content that arrives late. I also check short landscape screens, because a menu that fits a narrow portrait device may still extend beyond a phone held sideways.",
+          "The test should observe transitions as well as endpoints. Does a card briefly overflow before a font finishes loading? Does opening an accordion move focus somewhere unexpected? Does a sticky action cover the final form field when the virtual keyboard appears? These moments are easy to miss in static design review and are often the moments that make an otherwise polished interface feel unreliable.",
+        ],
+        visual: {
+          src: "/insights/responsive-content-stress-test.webp",
+          alt: "A handmade editorial test board examining interface layouts, long content, touch targets, image crops, and multiple screen proportions",
+          label: "Test the uncomfortable states",
+          caption:
+            "A dependable interface is reviewed with realistic content, alternate inputs, zoom, localization, and unusual dimensions. The awkward states reveal more than another perfect device mockup.",
+        },
+      },
+      {
+        heading: "Make responsive behavior part of the handoff",
+        paragraphs: [
+          "A responsive design is difficult to implement when the handoff contains only polished frames. I document the relationships: which region owns the width, which items can wrap, the minimum useful size of a component, what becomes scrollable, and where the information order changes. A short recording of the prototype moving through widths can answer questions that several screenshots cannot.",
+          "During implementation, designer and engineer should review the real browser together. The browser introduces content, font metrics, focus behavior, safe areas, and rendering details that a design tool cannot fully model. This review is not a search for pixel-level blame. It is where the team protects the intended hierarchy while making sensible adjustments to the material of the web.",
+        ],
+      },
+      {
+        heading: "A responsive interface review",
+        paragraphs: [
+          "Before releasing a new interface, I use a compact review to check whether it genuinely adapts or simply survives a few screenshots.",
+        ],
+        points: [
+          "Is the primary user task clear at narrow, medium, and wide widths?",
+          "Does content order reflect importance instead of the desktop source order by accident?",
+          "Are breakpoints based on composition failure rather than familiar device labels?",
+          "Can reusable components respond to their own containers where necessary?",
+          "Do navigation, tables, dialogs, and complex controls remain usable with touch and keyboard input?",
+          "Are type, spacing, media crops, and aspect ratios changing as one coherent system?",
+          "Have long content, localization, zoom, empty states, loading, errors, and permission variants been tested?",
+          "Does the layout remain stable while fonts, images, and asynchronous content arrive?",
+          "Does the implementation preserve the design's hierarchy at every width between the review frames?",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "performance-is-user-experience-a-practical-nextjs-optimization-playbook",
+    title: "Performance Is User Experience: A Practical Next.js Optimization Playbook",
+    excerpt:
+      "A measured approach to making Next.js applications load sooner, remain visually stable, and respond quickly without trading away product quality.",
+    lead:
+      "People do not experience a performance score. They experience whether the page reveals something useful, whether it stays still while they read, and whether the first interaction answers immediately. A useful Next.js performance practice begins with those moments and follows the evidence back into rendering, JavaScript, media, data, and third-party code.",
+    categoryId: "frontend-development",
+    image: "/insights/nextjs-performance-precision-workbench.webp",
+    imageAlt: "A web page assembled as a precision machine with measured assets traveling along copper delivery paths",
+    author: "Sagor Hossain",
+    publishedAt: "2025-10-16",
+    readTime: "12 min read",
+    tags: ["Next.js", "Web Performance", "Core Web Vitals"],
+    featured: true,
+    sections: [
+      {
+        heading: "Performance is a sequence, not a single event",
+        paragraphs: [
+          "A page can display a shell quickly and still feel slow because its main content arrives late. It can paint beautifully and then shift when a font or image loads. It can appear complete while the main thread is too busy to respond to a menu tap. I describe performance as a sequence: receive a useful response, reveal meaningful content, become stable, become interactive, and stay responsive during use.",
+          "That sequence connects technical work to a customer outcome. On a marketing page, the meaningful content may be the offer and primary proof. In an admin product, it may be the records and controls needed for the next task. Optimizing an invisible footer image while a blocked account summary waits behind a client-side waterfall improves a report more than it improves the experience.",
+        ],
+      },
+      {
+        heading: "Measure the page people actually receive",
+        paragraphs: [
+          "I begin with a production build and a repeatable journey. Development mode has different compilation and caching behavior, so it is a poor environment for judging delivery performance. Lab tools help reproduce conditions and inspect a trace, while field measurements reveal the range of devices, networks, and interactions real visitors bring. Both views matter: the lab explains a problem, and the field tells us whether it matters at scale.",
+          "Core Web Vitals provide useful signals for loading, interaction responsiveness, and visual stability, but I keep business context beside them. A fast landing page that loses its call to action during hydration is not successful. A dashboard may need separate measurements for initial route load, client navigation, filter interaction, and opening a heavy report. Segmenting by route, device class, and release often reveals a regression hidden by one site-wide average.",
+        ],
+      },
+      {
+        heading: "Keep the client boundary deliberately small",
+        paragraphs: [
+          "In the App Router, pages and layouts are Server Components by default. I keep static presentation, data access, and non-interactive composition there, then introduce Client Components around the smallest region that needs state, effects, event handlers, or browser APIs. Marking a large page with use client pulls its imports into the client graph and asks the browser to download, parse, and hydrate code that may never become interactive.",
+          "This does not mean splitting every button into a separate file. The useful boundary follows behavior. A product grid can remain server-rendered while a compact filter control owns client state. An article can render as HTML while copy-link and reading-progress features hydrate independently. Providers should wrap only the subtree that consumes them. The result is usually simpler to reason about and gives the browser less work before the first interaction.",
+        ],
+      },
+      {
+        heading: "Give the critical route the shortest journey",
+        paragraphs: [
+          "The browser cannot render what it has not discovered. Documents, critical styles, fonts, primary media, scripts, and data can form a chain in which each resource waits for the previous one. I inspect the network waterfall and ask which item creates the visible experience, which item blocks it, and which item could arrive later. The goal is not to preload everything. When every resource is marked urgent, priority stops carrying meaning.",
+          "Above-the-fold media should be discoverable in the initial response and sized for the space it occupies. Critical styles should not wait behind a client-only component that could have rendered on the server. Analytics, chat widgets, editors, maps, and large visualization libraries can often load after consent, visibility, or direct intent. Dynamic import is valuable when it delays a real cost, not when it scatters arbitrary loading boundaries across small components.",
+        ],
+        visual: {
+          src: "/insights/critical-rendering-path-letterpress.webp",
+          alt: "A letterpress transit diagram showing essential page resources on a direct route and optional work branching into deferred paths",
+          label: "Protect the critical route",
+          caption:
+            "The document, critical presentation, primary media, and first interaction need a short path. Analytics, below-fold assets, and optional tools can take deliberately deferred routes.",
+        },
+      },
+      {
+        heading: "Treat images and fonts as product decisions",
+        paragraphs: [
+          "Images are frequently the largest visual resources on a page, but deleting them is rarely the right answer for a product, portfolio, or case study. I choose an appropriate source size, modern format, compression level, and responsive sizes description. Width and height or a stable aspect-ratio reserve the final geometry before the file arrives. Only the likely primary image receives eager priority; below-fold media should load as it approaches the viewport.",
+          "Next.js Image can automate resizing and format negotiation when an image optimizer is available. Static exports need a custom image service or prepared responsive assets, so I generate compact WebP variants instead of shipping the original source everywhere. For fonts, I limit families, weights, and subsets, then use next/font when the deployment model supports it. The point is not to erase visual identity. It is to deliver exactly the identity the current viewport can use.",
+        ],
+      },
+      {
+        heading: "Remove JavaScript with evidence",
+        paragraphs: [
+          "JavaScript costs more than its transfer size. The browser must decompress, parse, compile, execute, and sometimes hydrate it while sharing the main thread with input. Bundle analysis reveals expensive packages, duplicated utilities, broad barrel imports, and features included on routes that never use them. I investigate those findings before reaching for compression, because the cheapest byte is the one the browser never receives.",
+          "Common improvements include importing a focused module instead of an entire library, replacing a dependency used for one small operation, loading a modal or editor only when requested, and moving data transformation to the server. Third-party scripts deserve the same ownership as application code. Each tag should have a product purpose, an accountable owner, a loading strategy, and a removal test. A script added in one meeting should not become permanent infrastructure by default.",
+        ],
+      },
+      {
+        heading: "Design stability and responsiveness into the component",
+        paragraphs: [
+          "Visual stability is usually decided before runtime. Images, embeds, skeletons, advertisements, and asynchronously revealed panels need reserved geometry. A skeleton should resemble the content it protects rather than occupying an arbitrary rectangle. Font fallbacks should have compatible metrics. Notifications can appear without pushing the control a person is about to select. These are design and component-contract decisions, not cleanup after a metric turns red.",
+          "Interaction responsiveness improves when handlers perform a small, visible update and move expensive work away from the immediate input. Large lists can be virtualized or paginated, filtering can avoid rebuilding unrelated subtrees, and non-urgent rendering can be scheduled without delaying direct feedback. I profile before adding memoization. A fast handler wrapped in layers of defensive optimization can make the component harder to maintain without changing what a person feels.",
+        ],
+      },
+      {
+        heading: "Fix one measured bottleneck, then verify the journey",
+        paragraphs: [
+          "Performance work becomes unreliable when a team changes images, rendering, caching, and animation together and celebrates whichever score moves. I prefer a tight loop: capture the baseline, identify the dominant cost, make one coherent change, compare the trace and payload, then test the actual journey for regressions. A smaller bundle is not a win if an important control now arrives late or assistive technology loses useful structure.",
+          "Budgets make this discipline repeatable. A route can have limits for initial JavaScript, primary image weight, third-party work, and visual shifts, with checks in pull requests or release review. The budget should reflect the product rather than an arbitrary universal number. Over time, field data, support reports, and conversion or task-completion signals show whether the technical improvement changed the experience that justified the work.",
+        ],
+        visual: {
+          src: "/insights/performance-optimization-workshop.webp",
+          alt: "A handcrafted miniature workshop measuring a page, adjusting its assets, and verifying the improved interface",
+          label: "Measure, change, verify",
+          caption:
+            "A useful optimization loop starts with evidence, changes the dominant constraint, and verifies the complete experience. Scores support the decision; they are not the product.",
+        },
+      },
+      {
+        heading: "A practical Next.js performance review",
+        paragraphs: [
+          "Before optimizing another isolated asset, I walk through this review in a production build and keep the answers attached to a real route and user journey.",
+        ],
+        points: [
+          "Is meaningful content present in the initial response, or does it wait for avoidable client-side work?",
+          "Are Client Component boundaries limited to the regions that genuinely need interactivity or browser APIs?",
+          "Does the network waterfall reveal a blocking resource or data request on the critical route?",
+          "Are primary images correctly sized and prioritized while below-fold media loads later?",
+          "Are font families, weights, subsets, and fallback metrics controlled deliberately?",
+          "Has the client bundle been analyzed for heavy dependencies, duplicated code, and route-irrelevant features?",
+          "Do third-party scripts load according to consent, visibility, or user intent rather than by default?",
+          "Is geometry reserved for media, asynchronous content, and loading states to prevent movement?",
+          "Are lab traces paired with field measurements and a customer-facing success signal?",
+          "Can the team compare the result against a baseline and explain which constraint actually changed?",
+        ],
+      },
+    ],
+  },
 ];
 
 export function getInsightCategory(categoryId: InsightCategoryId) {
