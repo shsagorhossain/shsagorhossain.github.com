@@ -6,11 +6,13 @@ import {
 } from "lucide-react";
 import { FaFacebookF, FaGithub, FaWhatsapp } from "react-icons/fa";
 import { Navigation } from "@/components/navigation";
-import { ServicesNetwork } from "@/components/services-network";
-import { ProjectsCarousel } from "@/components/projects-carousel";
-import { TestimonialsCarousel } from "@/components/testimonials-carousel";
-import { InsightsShowcase } from "@/components/insights-showcase";
-import { FaqExperience } from "@/components/faq-experience";
+import {
+  HomeFaqExperience,
+  HomeInsightsShowcase,
+  HomeProjectsCarousel,
+  HomeServicesNetwork,
+  HomeTestimonialsCarousel,
+} from "@/components/home-interactive-sections";
 import { insightCategories, insights } from "@/data/insights";
 import {
   HomeContactBanner,
@@ -35,7 +37,7 @@ export default function Home() {
             <p>What I Do</p>
             <h2>Services That I Provide</h2>
           </HomeReveal>
-          <ServicesNetwork />
+          <HomeServicesNetwork />
         </HomeSection>
 
         <HomeSection className="section site-shell projects" id="projects">
@@ -49,7 +51,7 @@ export default function Home() {
               <ArrowRight size={16} />
             </Link>
           </HomeReveal>
-          <ProjectsCarousel />
+          <HomeProjectsCarousel />
         </HomeSection>
 
         <HomeSection className="section insights" id="insights">
@@ -63,7 +65,7 @@ export default function Home() {
                 {insightCategories.length} Editorial Categories · {insights.length} Published
               </span>
             </HomeReveal>
-            <InsightsShowcase />
+            <HomeInsightsShowcase />
           </div>
         </HomeSection>
 
@@ -72,12 +74,12 @@ export default function Home() {
             <p>Client Stories</p>
             <h2>What People Say</h2>
           </HomeReveal>
-          <TestimonialsCarousel />
+          <HomeTestimonialsCarousel />
         </HomeSection>
 
         <HomeSection className="section faq" id="faq">
           <div className="site-shell">
-            <FaqExperience />
+            <HomeFaqExperience />
           </div>
         </HomeSection>
 
@@ -87,7 +89,7 @@ export default function Home() {
       <footer>
         <div className="site-shell footer-inner">
           <a className="brand" href="#home" aria-label="Back to top">
-            <Image className="brand-logo" src="/sh-logo.webp" alt="" width={72} height={48} />
+            <Image className="brand-logo" src="/sh-logo.webp" alt="" width={72} height={48} loading="lazy" />
           </a>
           <p>Full Stack Developer based in Bangladesh.</p>
           <div className="social-links">

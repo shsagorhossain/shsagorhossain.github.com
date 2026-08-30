@@ -17,7 +17,7 @@ import {
   Search,
   Sparkles,
 } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
 import { insightCategoryIcons } from "@/components/insight-category-icons";
 import {
   getInsightCategory,
@@ -85,6 +85,10 @@ function formatDate(date: string) {
   return dateFormatter.format(new Date(`${date}T00:00:00Z`));
 }
 
+function homeInsightImage(image: string) {
+  return image.replace("/insights/", "/insights/home/");
+}
+
 function chooseRandomInsights() {
   const shuffled = [...featuredInsights];
 
@@ -97,7 +101,9 @@ function chooseRandomInsights() {
 }
 
 export function InsightsShowcase() {
+  const carouselRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
+  const isInView = useInView(carouselRef, { margin: "220px 0px" });
   const [curatedInsights, setCuratedInsights] = useState(() => featuredInsights.slice(0, CURATED_INSIGHT_COUNT));
   const [selectionReady, setSelectionReady] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -112,7 +118,7 @@ export function InsightsShowcase() {
   const isIndexSlide = activeIndex === curatedInsights.length;
   const activeInsight = isIndexSlide ? undefined : curatedInsights[activeIndex];
   const category = activeInsight ? getInsightCategory(activeInsight.categoryId) : undefined;
-  const shouldAutoRotate = autoPlay && !reduceMotion && !isHovered && !hasFocus && !isIndexSlide;
+  const shouldAutoRotate = autoPlay && !reduceMotion && isInView && !isHovered && !hasFocus && !isIndexSlide;
 
   const markImageLoaded = useCallback((slug: string) => {
     setLoadedImages((current) => {
@@ -218,6 +224,7 @@ export function InsightsShowcase() {
       </motion.ul>
 
       {selectionReady ? <div
+        ref={carouselRef}
         className={`insight-carousel${shouldAutoRotate ? "" : " is-paused"}`}
         role="region"
         aria-label="Featured insights"
@@ -226,6 +233,7 @@ export function InsightsShowcase() {
         data-curated-insights={curatedInsights.map((insight) => insight.slug).join(",")}
         data-slide-kind={isIndexSlide ? "index" : "insight"}
         data-turn-side={turnSide}
+        data-in-view={isInView}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onFocusCapture={() => setHasFocus(true)}
@@ -307,12 +315,13 @@ export function InsightsShowcase() {
                       <Link className="insight-cover" href={`/insights/${activeInsight.slug}/`} aria-label={`Read ${activeInsight.title}`}>
                         <Image
                           className={`insight-cover-image${activeImageLoaded ? " is-loaded" : ""}`}
-                          src={activeInsight.image}
+                          src={homeInsightImage(activeInsight.image)}
                           alt={activeInsight.imageAlt}
                           fill
                           sizes="(max-width: 820px) 90vw, 45vw"
                           onLoad={() => markImageLoaded(activeInsight.slug)}
                           onError={() => markImageLoaded(activeInsight.slug)}
+                          loading="lazy"
                         />
                         <span
                           className="insight-cover-skeleton"
@@ -362,14 +371,14 @@ export function InsightsShowcase() {
                       <div className="insight-index-end-portal" aria-hidden="true">
                         <motion.div
                           className="insight-index-end-art"
-                          animate={reduceMotion ? undefined : { scale: [1, 1.035, 1], rotate: [0, 0.8, 0] }}
+                          animate={reduceMotion || !isInView ? undefined : { scale: [1, 1.035, 1], rotate: [0, 0.8, 0] }}
                           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
                         >
-                          <Image src="/insights/insights-index-archive-portal.webp" alt="" fill sizes="(max-width: 640px) 220px, 250px" />
+                          <Image src="/insights/insights-index-archive-portal.webp" alt="" fill sizes="(max-width: 640px) 220px, 250px" loading="lazy" />
                         </motion.div>
                         <motion.div
                           className="insight-index-end-orbit"
-                          animate={reduceMotion ? undefined : { rotate: 360 }}
+                          animate={reduceMotion || !isInView ? undefined : { rotate: 360 }}
                           transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
                         >
                           <span><BookMarked size={15} /></span>

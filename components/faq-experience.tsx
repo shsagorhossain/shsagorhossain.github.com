@@ -49,7 +49,7 @@ import {
   X,
 } from "lucide-react";
 import { SiDjango, SiPython, SiReact } from "react-icons/si";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
 
 const faqItems = [
   {
@@ -286,6 +286,9 @@ const detailMeta: Record<FaqDetailId, { index: string; label: string; titleId: s
 
 export function FaqExperience() {
   const reduceMotion = useReducedMotion();
+  const experienceRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(experienceRef, { margin: "220px 0px" });
+  const motionPaused = reduceMotion || !isInView;
   const [openItem, setOpenItem] = useState<string | null>(faqItems[0].id);
   const [detailOpen, setDetailOpen] = useState<FaqDetailId | null>(null);
   const expandButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -331,7 +334,7 @@ export function FaqExperience() {
 
   return (
     <>
-      <div className="faq-experience">
+      <div className={`faq-experience ${isInView ? "is-visible" : "is-idle"}`} ref={experienceRef} data-in-view={isInView}>
       <div className="faq-main-grid">
         <motion.aside
           className="faq-visual-column"
@@ -351,7 +354,7 @@ export function FaqExperience() {
             <div className="faq-orbit-grid" />
             <motion.div
               className="faq-orbit-rings"
-              animate={reduceMotion ? undefined : { rotate: 360 }}
+              animate={motionPaused ? undefined : { rotate: 360 }}
               transition={{ duration: 42, repeat: Infinity, ease: "linear" }}
             >
               <i /><i /><i /><i />
@@ -367,7 +370,7 @@ export function FaqExperience() {
                   className={`faq-tech-node faq-tech-${node.className}`}
                   aria-label={node.label}
                   key={node.className}
-                  animate={reduceMotion ? undefined : { y: [0, index % 2 === 0 ? -6 : 6, 0] }}
+                  animate={motionPaused ? undefined : { y: [0, index % 2 === 0 ? -6 : 6, 0] }}
                   transition={{ duration: 3.4 + index * 0.32, repeat: Infinity, ease: "easeInOut", delay: index * -0.45 }}
                 >
                   {Icon ? <Icon size={node.className === "django" ? 29 : 27} /> : <b>{node.text}</b>}
@@ -376,7 +379,7 @@ export function FaqExperience() {
             })}
             <motion.span
               className="faq-orbit-core"
-              animate={reduceMotion ? undefined : {
+              animate={motionPaused ? undefined : {
                 boxShadow: [
                   "0 0 0 10px rgba(76, 92, 255, 0.10), 0 0 38px rgba(79, 84, 255, 0.48)",
                   "0 0 0 17px rgba(76, 92, 255, 0.05), 0 0 58px rgba(143, 59, 255, 0.64)",
@@ -658,7 +661,7 @@ export function FaqExperience() {
                       <div className="faq-detail-system-map">
                         <motion.span
                           className="faq-system-goal"
-                          animate={reduceMotion ? undefined : { scale: [1, 1.035, 1] }}
+                          animate={motionPaused ? undefined : { scale: [1, 1.035, 1] }}
                           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                         >
                           <Compass size={21} />
@@ -673,7 +676,7 @@ export function FaqExperience() {
                         </div>
                         <motion.span
                           className="faq-system-release"
-                          animate={reduceMotion ? undefined : { boxShadow: ["0 0 0 rgba(44,216,131,0)", "0 0 24px rgba(44,216,131,.24)", "0 0 0 rgba(44,216,131,0)"] }}
+                          animate={motionPaused ? undefined : { boxShadow: ["0 0 0 rgba(44,216,131,0)", "0 0 24px rgba(44,216,131,.24)", "0 0 0 rgba(44,216,131,0)"] }}
                           transition={{ duration: 2.8, repeat: Infinity }}
                         >
                           <Rocket size={21} />
@@ -762,7 +765,7 @@ export function FaqExperience() {
                           <div className="faq-technology-stack">
                             <motion.div
                               className="faq-technology-brief"
-                              animate={reduceMotion ? undefined : { scale: [1, 1.025, 1] }}
+                              animate={motionPaused ? undefined : { scale: [1, 1.025, 1] }}
                               transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
                             >
                               <Search size={20} />
@@ -872,7 +875,7 @@ export function FaqExperience() {
                                 <span className="is-complete"><CheckCircle2 size={17} /><b>Plan</b><small>Aligned</small></span>
                                 <motion.span
                                   className="is-active"
-                                  animate={reduceMotion ? undefined : { borderColor: ["rgba(124,85,235,.55)", "rgba(87,140,255,.9)", "rgba(124,85,235,.55)"] }}
+                                  animate={motionPaused ? undefined : { borderColor: ["rgba(124,85,235,.55)", "rgba(87,140,255,.9)", "rgba(124,85,235,.55)"] }}
                                   transition={{ duration: 2.6, repeat: Infinity }}
                                 ><Code2 size={17} /><b>Build</b><small>In progress</small></motion.span>
                                 <span><MonitorSmartphone size={17} /><b>Demo</b><small>Scheduled</small></span>
@@ -966,7 +969,7 @@ export function FaqExperience() {
                           <div className="faq-codebase-map">
                             <motion.div
                               className="faq-codebase-source"
-                              animate={reduceMotion ? undefined : { scale: [1, 1.025, 1] }}
+                              animate={motionPaused ? undefined : { scale: [1, 1.025, 1] }}
                               transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
                             >
                               <Braces size={21} />
@@ -1068,7 +1071,7 @@ export function FaqExperience() {
                           <div className="faq-fullstack-map">
                             <motion.div
                               className="faq-fullstack-entry"
-                              animate={reduceMotion ? undefined : { scale: [1, 1.025, 1] }}
+                              animate={motionPaused ? undefined : { scale: [1, 1.025, 1] }}
                               transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
                             >
                               <Users size={20} />
@@ -1172,7 +1175,7 @@ export function FaqExperience() {
                           <div className="faq-integrations-map">
                             <motion.div
                               className="faq-integration-source"
-                              animate={reduceMotion ? undefined : { scale: [1, 1.025, 1] }}
+                              animate={motionPaused ? undefined : { scale: [1, 1.025, 1] }}
                               transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
                             >
                               <PlugZap size={20} />
@@ -1384,7 +1387,7 @@ export function FaqExperience() {
                           <div className="faq-kickoff-map">
                             <motion.div
                               className="faq-kickoff-message"
-                              animate={reduceMotion ? undefined : { y: [0, -3, 0] }}
+                              animate={motionPaused ? undefined : { y: [0, -3, 0] }}
                               transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut" }}
                             >
                               <MessageSquareText size={20} />

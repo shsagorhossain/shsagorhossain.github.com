@@ -90,6 +90,7 @@ export function HomeScrollProgress() {
 export function HomeHero() {
   const reduceMotion = useReducedMotion();
   const heroRef = useRef<HTMLElement>(null);
+  const heroInView = useInView(heroRef, { margin: "220px 0px" });
   const tiltX = useMotionValue(0);
   const tiltY = useMotionValue(0);
   const smoothTiltX = useSpring(tiltX, { stiffness: 170, damping: 24 });
@@ -116,7 +117,7 @@ export function HomeHero() {
   };
 
   return (
-    <section className="hero hero-live" id="home" ref={heroRef}>
+    <section className={`hero hero-live ${heroInView ? "is-visible" : "is-idle"}`} id="home" ref={heroRef}>
       <div className="hero-signal-grid" aria-hidden="true"><span /><span /><span /></div>
       <div className="hero-grid site-shell" id="about">
         <motion.div
@@ -188,7 +189,7 @@ export function HomeHero() {
           initial={reduceMotion ? false : { opacity: 0, scale: 0.94, x: 32 }}
           animate={{ opacity: 1, scale: 1, x: 0 }}
           transition={{ duration: 0.8, delay: 0.16, ease: "easeOut" }}
-          style={reduceMotion ? undefined : { y: portraitY, scale: portraitScale, rotateX: smoothTiltX, rotateY: smoothTiltY }}
+            style={reduceMotion || !heroInView ? undefined : { y: portraitY, scale: portraitScale, rotateX: smoothTiltX, rotateY: smoothTiltY }}
         >
           <div className="portrait-scan" aria-hidden="true" />
           <div className="portrait-dots" aria-hidden="true" />
@@ -197,13 +198,13 @@ export function HomeHero() {
           <motion.div
             className="floating-code code-left"
             aria-hidden="true"
-            animate={reduceMotion ? undefined : { y: [0, -8, 0] }}
+            animate={reduceMotion || !heroInView ? undefined : { y: [0, -8, 0] }}
             transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut" }}
           ><TerminalSquare size={25} /></motion.div>
           <motion.div
             className="floating-code code-right"
             aria-hidden="true"
-            animate={reduceMotion ? undefined : { y: [0, 9, 0] }}
+            animate={reduceMotion || !heroInView ? undefined : { y: [0, 9, 0] }}
             transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
           ><Code2 size={27} /></motion.div>
           <Image
@@ -242,7 +243,7 @@ function AnimatedStat({ value, suffix, label, tone, icon: Icon, index }: (typeof
 
   return (
     <motion.div
-      className="stat stat-live"
+      className={`stat stat-live ${inView ? "is-visible" : "is-idle"}`}
       ref={ref}
       initial={reduceMotion ? false : { opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -304,11 +305,14 @@ export function HomeReveal({ children, className }: { children: ReactNode; class
 
 export function HomeContactBanner() {
   const reduceMotion = useReducedMotion();
+  const contactRef = useRef<HTMLElement>(null);
+  const contactInView = useInView(contactRef, { margin: "220px 0px" });
 
   return (
     <motion.section
-      className="contact-banner contact-banner-live site-shell"
+      className={`contact-banner contact-banner-live site-shell ${contactInView ? "is-visible" : "is-idle"}`}
       id="contact"
+      ref={contactRef}
       initial={reduceMotion ? false : { opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true, margin: "-10%" }}

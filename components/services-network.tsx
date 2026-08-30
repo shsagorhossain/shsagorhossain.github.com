@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useInView } from "motion/react";
 import {
   ArrowUpRight,
   Check,
@@ -76,6 +77,9 @@ const services: Service[] = [
 ];
 
 export function ServicesNetwork() {
+  const networkRef = useRef<HTMLDivElement>(null);
+  const connectionsRef = useRef<SVGSVGElement>(null);
+  const isInView = useInView(networkRef, { margin: "220px 0px" });
   const nodeLayerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [pinned, setPinned] = useState(false);
@@ -83,14 +87,27 @@ export function ServicesNetwork() {
   const ActiveIcon = activeService.icon;
 
   useEffect(() => {
-    if (pinned || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (pinned || !isInView || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const interval = window.setInterval(() => {
       setActiveIndex((current) => (current + 1) % services.length);
     }, 4200);
 
     return () => window.clearInterval(interval);
-  }, [pinned]);
+  }, [isInView, pinned]);
+
+  useEffect(() => {
+    const svg = connectionsRef.current;
+    if (!svg) return;
+
+    if (isInView) {
+      svg.unpauseAnimations();
+    } else {
+      svg.pauseAnimations();
+    }
+
+    return () => svg.pauseAnimations();
+  }, [isInView]);
 
   useEffect(() => {
     const layer = nodeLayerRef.current;
@@ -111,8 +128,12 @@ export function ServicesNetwork() {
   };
 
   return (
-    <div className={`service-network tone-${activeService.tone}`}>
-      <svg className="service-connections" viewBox="0 0 1000 520" preserveAspectRatio="none" aria-hidden="true">
+    <div
+      className={`service-network tone-${activeService.tone} ${isInView ? "is-visible" : "is-idle"}`}
+      ref={networkRef}
+      data-in-view={isInView}
+    >
+      <svg className="service-connections" ref={connectionsRef} viewBox="0 0 1000 520" preserveAspectRatio="none" aria-hidden="true">
         {services.map((service, index) => (
           <g key={service.id} className={`connection tone-${service.tone} ${index === activeIndex ? "active" : ""}`}>
             <path d={service.path} pathLength="1" />

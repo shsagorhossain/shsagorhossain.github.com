@@ -15,7 +15,7 @@ import {
   LoaderCircle,
   Sparkles,
 } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
 import { projects, type PortfolioProject } from "@/data/projects";
 
 const HOMEPAGE_PROJECT_LIMIT = 10;
@@ -23,9 +23,11 @@ const homepageProjects = projects.slice(0, HOMEPAGE_PROJECT_LIMIT);
 const totalSlides = homepageProjects.length + 1;
 
 export function ProjectsCarousel() {
+  const carouselRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const navigationTimerRef = useRef<number | null>(null);
   const reduceMotion = useReducedMotion();
+  const isInView = useInView(carouselRef, { margin: "220px 0px" });
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [currentProject, setCurrentProject] = useState(0);
@@ -101,7 +103,7 @@ export function ProjectsCarousel() {
   };
 
   return (
-    <div className="project-carousel">
+    <div className="project-carousel" ref={carouselRef} data-in-view={isInView}>
       <AnimatePresence>
         {loadingProject && (
           <motion.div
@@ -142,7 +144,7 @@ export function ProjectsCarousel() {
             whileHover={reduceMotion ? undefined : { y: -5 }}
           >
             <a className="project-image" href={project.href} aria-label={project.actionLabel} onClick={(event) => openProject(event, project)}>
-              <Image src={project.image} alt={`${project.title} preview`} fill sizes="(max-width: 640px) 82vw, (max-width: 900px) 44vw, 30vw" />
+              <Image src={project.image} alt={`${project.title} preview`} fill sizes="(max-width: 640px) 82vw, (max-width: 900px) 44vw, 30vw" loading="lazy" />
               {project.badge && <span className="project-badge">{project.badge}</span>}
               <span className="project-image-action" aria-hidden="true">
                 {isLoading ? <LoaderCircle className="project-loading-spinner" size={16} /> : <ExternalLink size={15} />}
@@ -188,7 +190,7 @@ export function ProjectsCarousel() {
           <div className="project-index-gateway" aria-hidden="true">
             <motion.div
               className="project-index-orbit"
-              animate={reduceMotion ? undefined : { rotate: 360 }}
+              animate={reduceMotion || !isInView ? undefined : { rotate: 360 }}
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
             >
               <span><Code2 size={14} /></span>
@@ -197,7 +199,7 @@ export function ProjectsCarousel() {
             </motion.div>
             <motion.span
               className="project-index-core"
-              animate={reduceMotion ? undefined : { scale: [1, 1.07, 1] }}
+              animate={reduceMotion || !isInView ? undefined : { scale: [1, 1.07, 1] }}
               transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
             >
               <FolderKanban size={29} />

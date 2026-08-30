@@ -213,7 +213,7 @@ export function TestimonialsCarousel() {
   };
 
   return (
-    <div className="testimonial-carousel">
+    <div className={`testimonial-carousel ${isInView ? "is-visible" : "is-idle"}`} data-in-view={isInView}>
       <div
         className="testimonial-track"
         ref={trackRef}
