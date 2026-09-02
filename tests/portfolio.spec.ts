@@ -325,7 +325,7 @@ test("shows one featured insight and supports manual carousel navigation", async
   await expect(insightsSection.locator(".insight-category-icon svg")).toHaveCount(10);
   await expect(activeCard).toHaveCount(1);
   await expect(insightsSection).toContainText("Software Engineering");
-  await expect(insightsSection).toContainText("12 Published");
+  await expect(insightsSection).toContainText("16 Published");
   await expect(carousel.locator(".insight-carousel-pages button")).toHaveCount(6);
   await expect(carousel.locator(".insight-carousel-count")).toHaveCount(0);
   await expect(carousel).toHaveAttribute("data-slide-kind", "insight");
@@ -457,7 +457,7 @@ test("ends the homepage insight selection with a complete index invitation", asy
   await expect(carousel.getByRole("heading", { name: "This five-note selection ends here.", level: 3 })).toBeVisible();
   await expect(carousel).toContainText("End of curated selection");
   await expect(carousel).toContainText("05 / 05");
-  await expect(carousel).toContainText("all 12 engineering notes");
+  await expect(carousel).toContainText("all 16 engineering notes");
   await expect(carousel.locator(".insight-index-end-orbit svg")).toHaveCount(3);
   await expect(carousel.locator(".insight-index-end-art img")).toBeVisible();
   await expect(carousel.getByRole("link", { name: "Enter the Insights Index", exact: true })).toHaveAttribute("href", "/insights/");
@@ -482,15 +482,15 @@ test("browses, filters, and opens the dedicated Insights Index", async ({ page }
   await page.reload();
   await expect(spotlight).toHaveAttribute("data-spotlight-ready", "true");
   await expect(spotlight).not.toHaveAttribute("data-spotlight-insight", firstSpotlight!);
-  await expect(page.getByText("12", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("16", { exact: true }).first()).toBeVisible();
   await expect(page.getByRole("complementary", { name: "Filter insights by category" }).getByRole("button")).toHaveCount(11);
 
   const indexPanel = page.locator("[data-view-mode]");
   const articles = page.locator("main article");
-  await expect(indexPanel).toHaveAttribute("data-result-count", "12");
-  await expect(articles).toHaveCount(12);
+  await expect(indexPanel).toHaveAttribute("data-result-count", "16");
+  await expect(articles).toHaveCount(16);
   const readActions = articles.getByRole("link", { name: "Read Insight", exact: true });
-  await expect(readActions).toHaveCount(12);
+  await expect(readActions).toHaveCount(16);
   const actionWidthRatios = await readActions.evaluateAll((links) => links.map((link) => {
     const footer = link.closest("footer");
     return footer ? link.getBoundingClientRect().width / footer.getBoundingClientRect().width : 0;
@@ -503,13 +503,25 @@ test("browses, filters, and opens the dedicated Insights Index", async ({ page }
   await expect(articles.getByRole("heading", { name: "Building Idempotent APIs for Payments, Webhooks, and Automation" })).toBeVisible();
 
   await page.getByRole("button", { name: "Clear insight search" }).click();
+  await page.getByRole("button", { name: /Backend Development/ }).click();
+  await expect(indexPanel).toHaveAttribute("data-result-count", "2");
+  await expect(articles).toHaveCount(2);
+  await expect(articles.getByRole("heading", { name: "Designing APIs for Long-Running Workflows Without Holding Requests Open" })).toBeVisible();
+  await expect(articles.getByRole("heading", { name: "Building Auditable Role-Based Access Control for Admin Platforms" })).toBeVisible();
+
+  await page.getByRole("button", { name: /AI & Automation/ }).click();
+  await expect(indexPanel).toHaveAttribute("data-result-count", "2");
+  await expect(articles).toHaveCount(2);
+  await expect(articles.getByRole("heading", { name: "Building AI-Assisted Workflows with Human Approval and Reliable Fallbacks" })).toBeVisible();
+  await expect(articles.getByRole("heading", { name: "From Prompt to Production: Evaluating AI Features Beyond Demo Quality" })).toBeVisible();
+
   await page.getByRole("button", { name: /DevOps & Cloud/ }).click();
   await expect(indexPanel).toHaveAttribute("data-result-count", "0");
   await expect(articles).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "No notes found in this lane" })).toBeVisible();
 
   await page.getByRole("button", { name: "Reset index" }).last().click();
-  await expect(indexPanel).toHaveAttribute("data-result-count", "12");
+  await expect(indexPanel).toHaveAttribute("data-result-count", "16");
   await page.getByRole("button", { name: "List view" }).click();
   await expect(indexPanel).toHaveAttribute("data-view-mode", "list");
 
@@ -792,6 +804,98 @@ test("opens the practical Next.js performance playbook", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "A practical Next.js performance review" })).toBeVisible();
   await expect(page.getByAltText("A letterpress transit diagram showing essential page resources on a direct route and optional work branching into deferred paths")).toBeVisible();
   await expect(page.getByAltText("A handcrafted miniature workshop measuring a page, adjusting its assets, and verifying the improved interface")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the long-running API workflows insight", async ({ page }) => {
+  await page.goto("/insights/designing-apis-for-long-running-workflows-without-holding-requests-open/");
+
+  await expect(page.getByRole("heading", { name: "Designing APIs for Long-Running Workflows Without Holding Requests Open", level: 1 })).toBeVisible();
+  await expect(page.getByText("April 8, 2026")).toBeVisible();
+  await expect(page.getByText("12 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight Backend Development");
+  await expect(page.getByAltText("A precision dispatch terminal accepting a request capsule and moving durable work through a monitored sequence of processing stations")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Make the operation a first-class resource" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Build recovery into the operational path" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A long-running API workflow review" })).toBeVisible();
+  await expect(page.getByAltText("A Japanese woodblock-style operation state machine flowing from acceptance through waiting and active work into successful, failed, or cancelled outcomes")).toBeVisible();
+  await expect(page.getByAltText("A handcrafted ceramic operations map connecting one authoritative workflow record to polling, webhooks, retries, workers, reconciliation, and human recovery")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the auditable RBAC insight", async ({ page }) => {
+  await page.goto("/insights/building-auditable-role-based-access-control-for-admin-platforms/");
+
+  await expect(page.getByRole("heading", { name: "Building Auditable Role-Based Access Control for Admin Platforms", level: 1 })).toBeVisible();
+  await expect(page.getByText("June 23, 2025")).toBeVisible();
+  await expect(page.getByText("13 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight Backend Development");
+  await expect(page.getByAltText("A paper-theatre administrative archive guiding staff identities through role, permission, scope, approval, and continuous audit stations")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Model permission as action, resource, and scope" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Separate duties where one actor is too much" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "An auditable RBAC review" })).toBeVisible();
+  await expect(page.getByAltText("An archival authorization ledger aligning identity, role, permission, resource scope, context, and a final allow or deny decision")).toBeVisible();
+  await expect(page.getByAltText("A bold risograph process showing separate requester and approver identities, a blocked self-approval path, execution gate, and continuous audit timeline")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the human-approved AI workflows insight", async ({ page }) => {
+  await page.goto("/insights/building-ai-assisted-workflows-with-human-approval-and-reliable-fallbacks/");
+
+  await expect(page.getByRole("heading", { name: "Building AI-Assisted Workflows with Human Approval and Reliable Fallbacks", level: 1 })).toBeVisible();
+  await expect(page.getByText("March 17, 2026")).toBeVisible();
+  await expect(page.getByText("14 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight AI & Automation");
+  await expect(page.getByAltText("A handcrafted AI workflow workbench where model proposals move through human review, guarded execution, and a visible manual fallback lane")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Let the model propose and the application decide" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Keep the fallback as a first-class workflow" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "An AI-assisted workflow review" })).toBeVisible();
+  await expect(page.getByAltText("A hand-inked blueprint routing AI proposals through confidence and policy gates into human review, restricted tools, and a manual fallback")).toBeVisible();
+  await expect(page.getByAltText("A ceramic workflow mural connecting an AI task record to human approval, restricted tool execution, manual fallback, recovery, and evaluation feedback")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the AI evaluation insight", async ({ page }) => {
+  await page.goto("/insights/from-prompt-to-production-evaluating-ai-features-beyond-demo-quality/");
+
+  await expect(page.getByRole("heading", { name: "From Prompt to Production: Evaluating AI Features Beyond Demo Quality", level: 1 })).toBeVisible();
+  await expect(page.getByText("November 6, 2025")).toBeVisible();
+  await expect(page.getByText("13 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight AI & Automation");
+  await expect(page.getByAltText("A handcrafted AI evaluation lab comparing model outputs, human annotations, risk checks, and production-readiness evidence")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Name the task and the acceptable outcome" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Roll out with feedback and a way back" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "An AI feature evaluation review" })).toBeVisible();
+  await expect(page.getByAltText("A handmade research notebook organizing representative AI evaluation examples across quality, safety, consistency, latency, cost, and user outcome")).toBeVisible();
+  await expect(page.getByAltText("A handcrafted production rollout theatre showing an AI feature moving through shadow mode, pilot, gradual release, monitoring, feedback, and rollback")).toBeVisible();
   await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
   await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
 

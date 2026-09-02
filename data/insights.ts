@@ -1364,6 +1364,430 @@ export const insights: InsightPost[] = [
       },
     ],
   },
+  {
+    slug: "designing-apis-for-long-running-workflows-without-holding-requests-open",
+    title: "Designing APIs for Long-Running Workflows Without Holding Requests Open",
+    excerpt:
+      "How to accept expensive work quickly, expose dependable progress, and recover from failure through durable operation resources instead of fragile open requests.",
+    lead:
+      "An export, import, campaign launch, document build, or AI workflow may take seconds or hours. The HTTP request that starts it should not be asked to live that long. I design the request as a short, durable handoff and make the operation itself a resource that clients, workers, and operators can understand over time.",
+    categoryId: "backend-development",
+    image: "/insights/async-operation-dispatch-terminal.webp",
+    imageAlt: "A precision dispatch terminal accepting a request capsule and moving durable work through a monitored sequence of processing stations",
+    author: "Sagor Hossain",
+    publishedAt: "2026-04-08",
+    readTime: "12 min read",
+    tags: ["API Design", "Background Jobs", "Reliability"],
+    featured: true,
+    sections: [
+      {
+        heading: "The request and the work have different lifetimes",
+        paragraphs: [
+          "A request lives inside several time limits: the browser, reverse proxy, load balancer, application server, and upstream platform may each decide when it has waited long enough. Extending those limits can postpone a symptom, but it does not make a multi-minute operation reliable. A deployment can restart the process, a mobile connection can disappear, and a third-party dependency can pause after the original caller has gone away.",
+          "I separate the moment a system accepts responsibility from the period in which it performs the work. The request authenticates the caller, validates intent, records an operation, and returns a stable reference. A worker continues independently. This gives the client a quick and truthful response while giving the backend room to retry, pause, cancel, and recover without pretending one network connection represents the lifetime of the business process.",
+        ],
+      },
+      {
+        heading: "Accept work only after the handoff is durable",
+        paragraphs: [
+          "A `202 Accepted` response is a promise that the request has been accepted for processing, not evidence that processing succeeded. I return it only after the system has durably recorded enough information to continue. That may mean committing an operation record and an outbox entry in one database transaction, or publishing to a durable queue whose acknowledgement has clear semantics. If the handoff cannot be preserved, the API should return a failure instead of optimistic acceptance.",
+          "The acceptance boundary still performs cheap decisions synchronously. Authentication, authorization, schema validation, account limits, idempotency checks, and obvious business conflicts belong before the operation is created. The response includes an operation identifier, its initial state, and a URL where current status can be retrieved. The payload says what the server knows now and never disguises queued work as a completed result.",
+        ],
+      },
+      {
+        heading: "Make the operation a first-class resource",
+        paragraphs: [
+          "A background job identifier is an implementation detail; an operation resource is a public contract. I give it a stable identity, type, state, creation and update times, progress or stage information, a result link when available, a structured failure when it cannot complete, and capabilities such as whether cancellation is currently possible. Internal queue names, worker class paths, and retry counters stay private unless the client can make a useful decision from them.",
+          "States form a finite model rather than a loose collection of booleans. Accepted work may move through queued and running states before reaching succeeded, failed, or cancelled. Cancellation can be requested without claiming the worker has already stopped. Terminal states do not quietly become active again; a retry that represents new business intent receives a new operation or a clearly modeled attempt. Explicit transitions make APIs, interfaces, alerts, and recovery tools agree about reality.",
+        ],
+        visual: {
+          src: "/insights/async-operation-state-machine-woodblock.webp",
+          alt: "A Japanese woodblock-style operation state machine flowing from acceptance through waiting and active work into successful, failed, or cancelled outcomes",
+          label: "Model the whole lifetime",
+          caption:
+            "A durable operation has named transitions and terminal outcomes. Controlled retries return transient work to a valid waiting state; completed outcomes do not drift back into motion.",
+        },
+      },
+      {
+        heading: "Make submission and execution idempotent",
+        paragraphs: [
+          "A client can lose the acceptance response and submit again. I let it provide an idempotency key scoped to the caller and operation type, store a fingerprint of the meaningful request, and return the original operation for a legitimate duplicate. Reusing the same key with a different payload is a conflict, not a reason to launch uncertain work. The retention period for keys should match how long a realistic retry may arrive.",
+          "The worker needs its own protection because queues commonly deliver at least once. A durable operation claim, unique business key, or compare-and-set transition prevents two workers from executing the same step concurrently. External side effects need stable identities as well: payment requests, outbound messages, files, and provider calls should be safely repeatable or recorded before the next step begins. Idempotency is not one header at the API edge; it is an end-to-end property of the workflow.",
+        ],
+      },
+      {
+        heading: "Design a status contract for humans and machines",
+        paragraphs: [
+          "A useful status response answers what is happening, when it last changed, whether the caller should continue waiting, and what becomes available next. I prefer honest stages such as validating, importing, reconciling, or packaging over a fabricated percentage that climbs to ninety-nine and stops. When measurable units exist, the resource can expose completed and total counts while acknowledging that the total may still change.",
+          "Failures need stable machine-readable codes and a safe human explanation. Problem Details can provide a consistent shape, but the public message should explain what the client can do rather than reveal stack traces, SQL, credentials, or provider internals. A failed operation may link to a corrected-input action or permit a new attempt. A succeeded operation links to its result and states how long that result and the operation history will remain available.",
+        ],
+      },
+      {
+        heading: "Choose the update channel by relationship",
+        paragraphs: [
+          "Polling is a dependable baseline because it works through ordinary HTTP infrastructure and recovers naturally after a client disconnects. The server can recommend a sensible interval, and clients can use backoff, jitter, conditional requests, and visibility awareness to avoid creating a synchronized polling load. Polling the operation resource is often enough for an interface whose users only need meaningful stage changes.",
+          "Webhooks suit system-to-system delivery, but they need signed payloads, stable event identifiers, bounded retries, replay protection, delivery history, and a way for consumers to fetch the authoritative operation afterward. Server-sent events or WebSockets can make a foreground experience feel immediate, yet the stream should remain a notification channel rather than the only record of state. When a connection returns, the client rebuilds truth from the operation resource instead of guessing which events it missed.",
+        ],
+      },
+      {
+        heading: "Treat cancellation and progress as domain behavior",
+        paragraphs: [
+          "Cancellation is rarely a thread being killed at an arbitrary instruction. A worker observes a cancellation request at safe boundaries, stops scheduling new steps, and decides what to do with effects already committed. Some operations can be cancelled only while queued. Others need a compensating action, such as releasing a reservation or deleting a partial artifact. The API should expose those rules instead of presenting a cancel button that sometimes lies.",
+          "Progress has similar semantics. A ten-file export can report completed files; an AI generation step may only report that the provider is processing. I store progress at durable checkpoints rather than emitting every in-memory update. This keeps status useful after a restart and prevents high-frequency progress writes from competing with the work. The interface receives enough detail to set expectations without turning implementation noise into a permanent API contract.",
+        ],
+      },
+      {
+        heading: "Build recovery into the operational path",
+        paragraphs: [
+          "Every operation carries one correlation identity through the request, operation record, queue message, worker logs, external calls, and notifications. I monitor acceptance rate, queue age, time in each state, completion latency, retry volume, terminal failures, and operations that have stopped making progress. A scheduled detector can mark or escalate work that outlives its expected lease rather than leaving it running forever in the interface.",
+          "Recovery tools are part of the design. Operators need to inspect attempts, understand the last durable checkpoint, retry only eligible work, suppress a poisonous input, and reconcile the operation against authoritative business records. Webhook delivery can fail while the operation succeeds, so delivery status remains separate from business status. The central record lets polling, notifications, workers, reconciliation, and human intervention converge on the same history.",
+        ],
+        visual: {
+          src: "/insights/async-operation-recovery-ceramic-map.webp",
+          alt: "A handcrafted ceramic operations map connecting one authoritative workflow record to polling, webhooks, retries, workers, reconciliation, and human recovery",
+          label: "One record, several recovery paths",
+          caption:
+            "Workers and delivery channels can fail independently. An authoritative operation record keeps retries, reconciliation, notifications, and operator action aligned around the same durable history.",
+        },
+      },
+      {
+        heading: "A long-running API workflow review",
+        paragraphs: [
+          "Before releasing an asynchronous endpoint, I follow one operation from submission through recovery and verify that every participant can tell the same story.",
+        ],
+        points: [
+          "Does the API return only after responsibility for the work has been durably recorded?",
+          "Can a retried submission return the original operation without creating duplicate business effects?",
+          "Are operation states, valid transitions, terminal outcomes, and cancellation semantics explicit?",
+          "Does the status resource expose useful stages, timestamps, result links, and safe structured failures?",
+          "Can polling clients back off and resume without losing the authoritative state?",
+          "Are webhook events signed, replayable, deduplicated, and separate from business completion?",
+          "Can workers repeat after a crash without repeating payments, messages, files, or other side effects?",
+          "Are progress and cancellation persisted at safe domain checkpoints rather than inferred from a live process?",
+          "Can operators detect stuck work, inspect attempts, retry safely, and reconcile against business records?",
+          "Are retention, privacy, observability, and expected completion times defined for the operation lifecycle?",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "building-auditable-role-based-access-control-for-admin-platforms",
+    title: "Building Auditable Role-Based Access Control for Admin Platforms",
+    excerpt:
+      "A practical model for roles, scoped permissions, privileged administration, separation of duties, and evidence that explains every sensitive access decision.",
+    lead:
+      "Admin platforms concentrate the actions that can change customers, money, access, and operational truth. A role name alone is not enough protection. I want each decision to express who is acting, what they may do, which resource and scope are involved, why the action is allowed, and what evidence remains afterward.",
+    categoryId: "backend-development",
+    image: "/insights/auditable-rbac-paper-archive.webp",
+    imageAlt: "A paper-theatre administrative archive guiding staff identities through role, permission, scope, approval, and continuous audit stations",
+    author: "Sagor Hossain",
+    publishedAt: "2025-06-23",
+    readTime: "13 min read",
+    tags: ["Authorization", "RBAC", "Auditability"],
+    featured: true,
+    sections: [
+      {
+        heading: "Roles are vocabulary, not the final verdict",
+        paragraphs: [
+          "Roles are valuable because they translate organizational responsibility into manageable bundles of permissions. Support agents, finance reviewers, campaign operators, and platform administrators are concepts a business can discuss. Trouble begins when code treats a broad role name as the complete authorization decision. A user who is a finance reviewer in one account should not automatically review every account, and a support role may view a customer without being allowed to reveal credentials or alter billing.",
+          "I keep authentication, role assignment, permission, scope, and contextual constraints distinct. The final decision asks whether this actor can perform this action on this resource in this scope under the current conditions. Roles contribute permissions, but tenant membership, record ownership, workflow state, approval requirements, or an active elevation can narrow them. This hybrid model preserves understandable roles without forcing every business rule into an expanding list of role names.",
+        ],
+      },
+      {
+        heading: "Model permission as action, resource, and scope",
+        paragraphs: [
+          "Permission names should describe behavior precisely. `invoice.read`, `invoice.refund`, `member.invite`, and `member.role.assign` are easier to review than `manage_finance` or `super_admin`. Read, create, update, approve, export, impersonate, and delete carry different risk. I also distinguish sensitive fields and bulk operations when their impact differs from an ordinary record change.",
+          "Scope is a first-class part of assignment. A role may apply to one tenant, department, project, region, or set of records, and that boundary travels into every authorization query. Roles bundle permissions; assignments connect a user to a role and scope, optionally with activation and expiry times. Direct user permissions remain rare, visible exceptions with an owner and reason. Otherwise the system slowly becomes impossible to explain through roles at all.",
+        ],
+        visual: {
+          src: "/insights/authorization-decision-ledger.webp",
+          alt: "An archival authorization ledger aligning identity, role, permission, resource scope, context, and a final allow or deny decision",
+          label: "Build the whole decision",
+          caption:
+            "A role contributes a permission, but the decision also needs the action, resource, scope, and current context. Misaligned layers are denied instead of inheriting accidental access.",
+        },
+      },
+      {
+        heading: "Engineer roles from real operational work",
+        paragraphs: [
+          "I design roles with the people who perform the work. We inventory important actions, identify which responsibilities normally travel together, and separate permissions whose combination would create unnecessary risk. Starting from existing database flags often preserves historical accidents. Starting from job titles alone creates roles that sound familiar but do not match the product's actual controls.",
+          "A small set of stable role templates is easier to understand than one role for every employee variation. Scoped assignments and time-limited elevation handle many exceptions without role explosion. Hierarchy can reduce duplication, but deep inheritance makes access difficult to predict, so I keep it shallow and provide a way to preview the effective permissions before an assignment changes. Every new permission is denied by default until a reviewed role includes it.",
+        ],
+      },
+      {
+        heading: "Enforce policy at every trusted boundary",
+        paragraphs: [
+          "Hiding a button is useful interface design, not security. The backend validates permission on every request and on every background action that acts for a user or system identity. I route checks through a small, consistent policy surface that receives the actor, action, resource, and scope. Controllers and workers ask a business question; they do not scatter role-name comparisons across endpoints.",
+          "Object-level access must shape the query itself. Fetching an unrestricted record and checking only afterward can leak existence, counts, relationships, or data through a forgotten path. Tenant and scope filters belong in repositories or policy-aware query services, with field-level rules applied before serialization. Exports, search, notifications, scheduled jobs, and internal support tools need the same boundary because attackers and accidents do not limit themselves to the primary interface.",
+        ],
+      },
+      {
+        heading: "Treat role administration as privileged work",
+        paragraphs: [
+          "The screen that grants access is often more powerful than the screens it protects. Role creation, permission changes, invitations, assignment, revocation, and impersonation deserve explicit permissions of their own. An administrator should not be able to grant a role broader than their own authorized scope, and the API should calculate that rule independently of what the form happens to show.",
+          "I make assignments carry who requested them, who approved them when required, why they exist, when they begin, and when they expire. High-risk access can be just in time, activated for one support case or incident rather than remaining permanent. Revocation should take effect predictably across sessions, caches, workers, and API tokens. A helpful admin interface previews the effective change and warns about conflicts before committing it.",
+        ],
+      },
+      {
+        heading: "Separate duties where one actor is too much",
+        paragraphs: [
+          "Some actions should not be available to one person from beginning to end. A refund above a threshold, export of sensitive data, production configuration change, or assignment of a privileged role may require a requester and an independent approver. The system enforces that separation by identity and policy; two buttons on the same user's screen are not two-person control.",
+          "Approval records bind the exact proposed action, resource, scope, and relevant before-state so a later mutation cannot reuse permission for something broader. Self-approval is denied, expired approvals cannot execute, and material changes invalidate the approval. Emergency access is possible through a break-glass path with a short lifetime, a stated incident, immediate notification, and mandatory review. Flexibility is deliberate and leaves stronger evidence, not a hidden bypass.",
+        ],
+        visual: {
+          src: "/insights/separation-of-duties-risograph.webp",
+          alt: "A bold risograph process showing separate requester and approver identities, a blocked self-approval path, execution gate, and continuous audit timeline",
+          label: "Two actors, one accountable change",
+          caption:
+            "Sensitive work separates request, approval, and execution. The approved payload is fixed, self-approval is blocked, and one evidence trail connects the decision to its final outcome.",
+        },
+      },
+      {
+        heading: "Record evidence that answers real questions",
+        paragraphs: [
+          "An audit event should help answer who acted, as whom, from which tenant or scope, on what resource, through which request, under which policy version, and with what result. I record the authenticated actor, effective actor during impersonation, action, resource identifier, decision, reason code, correlation identifier, timestamp, and relevant before-and-after change. Authentication events, authorization decisions, access administration, approval, and business execution remain distinguishable but connected.",
+          "Audit history is append-only from the application's perspective and protected more strongly than ordinary operational logs. Restrictive access, retention policy, integrity controls, monitored export, and separation from the system being audited reduce the chance that a privileged actor can rewrite the story. Evidence must also respect privacy: tokens, passwords, full payment data, message bodies, and unnecessary personal fields do not become safer merely because they are stored in an audit system.",
+        ],
+      },
+      {
+        heading: "Test and operate authorization as a product",
+        paragraphs: [
+          "Authorization tests begin with a permission matrix that covers roles, actions, scopes, ownership, resource state, and sensitive exceptions. I test allowed cases, but denied cases matter more: a neighboring tenant, expired elevation, inactive membership, direct API call, background replay, bulk endpoint, and newly introduced action with no policy. Property and integration tests can verify that every protected route reaches the policy layer and that scoped queries never return records outside the assignment.",
+          "The model needs continuing ownership after release. Access reviews identify dormant accounts, permanent emergency roles, stale invitations, direct grants, and assignments that outlived a project. Permission and role changes are versioned and reviewed like product behavior. Alerts focus on meaningful signals such as repeated denials, unusual exports, privilege escalation, self-service attempts, impersonation, and break-glass use. The goal is not a quiet log; it is access that remains explainable as the organization changes.",
+        ],
+      },
+      {
+        heading: "An auditable RBAC review",
+        paragraphs: [
+          "Before shipping an admin capability, I trace both a permitted and denied action through assignment, policy, data access, execution, and evidence.",
+        ],
+        points: [
+          "Are permissions named as precise actions on resources rather than broad administrative labels?",
+          "Does every role assignment carry an explicit tenant, department, project, or other valid scope?",
+          "Does the backend deny new and unmatched actions by default and validate every request path?",
+          "Are object and field restrictions applied while querying and serializing, not only after data is loaded?",
+          "Can an administrator grant only roles and scopes they are authorized to manage?",
+          "Do sensitive actions enforce independent approval, payload binding, expiry, and self-approval prevention?",
+          "Are temporary elevation, impersonation, revocation, and break-glass access visible and time bounded?",
+          "Can audit evidence connect identity, effective actor, policy, scope, decision, change, and outcome without storing secrets?",
+          "Do tests cover denied neighboring scopes, expired access, direct API calls, bulk actions, and background execution?",
+          "Is there an owner and recurring process for reviewing stale access, role drift, exceptions, and privileged activity?",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "building-ai-assisted-workflows-with-human-approval-and-reliable-fallbacks",
+    title: "Building AI-Assisted Workflows with Human Approval and Reliable Fallbacks",
+    excerpt:
+      "A practical architecture for using AI where it helps, keeping people accountable for consequential decisions, and continuing useful work when the model or a tool is unavailable.",
+    lead:
+      "The most useful AI workflow is rarely the one that removes a person from every step. It is the one that removes repetitive effort while making responsibility, uncertainty, and recovery easier to see. I treat the model as a capable proposal engine inside a workflow whose permissions, approval points, and fallback paths belong to the application.",
+    categoryId: "ai-automation",
+    image: "/insights/ai-human-review-workbench.webp",
+    imageAlt: "A handcrafted AI workflow workbench where model proposals move through human review, guarded execution, and a visible manual fallback lane",
+    author: "Sagor Hossain",
+    publishedAt: "2026-03-17",
+    readTime: "14 min read",
+    tags: ["AI Workflows", "Human Oversight", "Automation"],
+    featured: true,
+    sections: [
+      {
+        heading: "Automation begins with responsibility",
+        paragraphs: [
+          "A model can summarize a conversation, classify an inbound lead, draft a reply, or suggest the next operation. Those capabilities do not automatically grant it authority to send a message, alter an account, issue a refund, or publish a decision. The product must decide which parts are assistance and which parts are consequential action.",
+          "I start by describing the human outcome and the cost of getting it wrong. Low-risk suggestions can move quickly through a review queue. A high-impact decision may require a named approver, a reason, and evidence that can be inspected later. This framing prevents the team from measuring success only as fewer clicks while quietly moving risk into a place no one owns.",
+        ],
+      },
+      {
+        heading: "Let the model propose and the application decide",
+        paragraphs: [
+          "The model should return a proposal inside a workflow contract, not directly control business state. The application validates the output, checks permissions, loads authoritative records, applies deterministic rules, and decides whether a next step is eligible. A model can identify that a conversation may need escalation; a policy decides whether an escalation can be created and which team receives it.",
+          "This separation also makes provider changes less frightening. The model adapter can change prompt format, model version, or vendor without changing the domain action. The workflow stores the input references, model configuration, proposal, validation result, and decision separately. When a person edits a suggestion, the final action remains attributable to that person and the application policy rather than being misrepresented as raw model output.",
+        ],
+      },
+      {
+        heading: "Make uncertainty a routing decision",
+        paragraphs: [
+          "Confidence is not a universal truth emitted by a model. It is a signal whose usefulness depends on the task, the data, and the consequence of an error. I calibrate it against a representative evaluation set and use it to route work, not to bypass policy. High confidence may reduce review effort for a narrow, low-risk classification; it should not turn an uncertain financial action into an automatic one.",
+          "Review queues need enough context for a person to make a good decision without reconstructing the entire run. I show the relevant source, proposal, extracted facts, uncertainty or missing evidence, suggested action, and the policy that applies. A reviewer can approve, edit, reject, request more information, or return the item to a fallback process. Queue priority reflects urgency and risk rather than whichever model response arrived last.",
+        ],
+        visual: {
+          src: "/insights/ai-human-fallback-blueprint.webp",
+          alt: "A hand-inked blueprint routing AI proposals through confidence and policy gates into human review, restricted tools, and a manual fallback",
+          label: "Route uncertainty, do not hide it",
+          caption:
+            "A confidence signal can help prioritize work, but policy and human judgment decide what may happen next. Uncertain or unavailable AI work has a visible manual route.",
+        },
+      },
+      {
+        heading: "Give tools narrow permissions and clear contracts",
+        paragraphs: [
+          "Tool use turns a language response into a system action, so it deserves the same care as any other privileged integration. Each tool has a narrow input schema, explicit authorization, bounded result, timeout, and audit event. The model can request `find_customer` or `draft_refund`, but the application decides whether that tool is available for this actor, resource, scope, and workflow state.",
+          "I avoid giving an agent a general database connection, arbitrary HTTP client, or unrestricted code execution path. Tool results are treated as untrusted input and validated before they influence the next step. Sensitive values are minimized, credentials stay outside prompts, and the system can disable one tool without disabling the entire workflow. A useful tool catalog is small enough for reviewers and operators to understand.",
+        ],
+      },
+      {
+        heading: "Keep the fallback as a first-class workflow",
+        paragraphs: [
+          "A fallback is not an apology printed after a model timeout. It is a designed path that preserves the customer's outcome when the model is slow, unavailable, unsafe, or simply not a good fit for the input. A support reply can return to a human queue. A classification can use deterministic rules. An import can pause for an operator to resolve ambiguous rows. The user should know what is happening and what happens next.",
+          "The fallback shares the same operation identity, input, status, and audit trail as the AI path. This avoids duplicate cases and lets an operator resume from a safe checkpoint. The workflow records why it fell back: provider timeout, policy refusal, invalid output, low confidence, missing context, or a human request. Those reasons become product evidence instead of disappearing into an application log.",
+        ],
+      },
+      {
+        heading: "Validate outputs before they become decisions",
+        paragraphs: [
+          "A response that sounds convincing can still be malformed, incomplete, or based on information the system should not trust. I constrain output to a schema wherever possible, validate required fields and enumerations, and reject extra instructions that do not belong to the task. Deterministic checks verify identifiers against the database, totals against authoritative calculations, and quoted evidence against the source available to the workflow.",
+          "The validation layer should classify failures usefully. A malformed structure is different from a well-formed answer with missing evidence, and both differ from a policy refusal. The workflow can retry a transient provider failure, ask for human review when evidence is insufficient, or take the deterministic route when the output cannot be trusted. The original output is retained for investigation under appropriate data controls, but it is never silently treated as a business fact.",
+        ],
+      },
+      {
+        heading: "Make retries and side effects safe",
+        paragraphs: [
+          "AI workflows combine probabilistic output with ordinary distributed-system failure. A queue can redeliver a task, a provider can time out after completing it, and a user can refresh while an approval is being saved. Every run gets a durable identity and attempt history. The system distinguishes retrying a model proposal from retrying the business action that follows it.",
+          "Side effects use idempotency keys and explicit confirmation boundaries. A generated message is not sent until the send action is authorized and recorded. A suggested update is compared with the current record before commit. A tool call that cannot prove its outcome moves to reconciliation rather than blindly running again. The workflow can repeat computation without repeating a payment, notification, account change, or other irreversible effect.",
+        ],
+      },
+      {
+        heading: "Operate the human-AI boundary",
+        paragraphs: [
+          "Production monitoring covers more than provider latency and token cost. I track review acceptance, edit distance, rejection reasons, fallback rate, policy refusals, tool failures, task completion, user correction, and the time a human spends resolving the queue. A model that produces fluent drafts but makes reviewers slower is not improving the workflow. A lower automated rate may be correct if it prevents expensive errors.",
+          "Incidents need containment controls that work without a code release. Operators should be able to disable a model, tool, prompt version, tenant, or workflow route; drain or reassign pending work; and identify which records were touched by a problematic run. Feedback from reviewers becomes labeled evidence for evaluation, but personal or confidential content is retained only when the purpose and access are clear. Human oversight is an operating capability, not a checkbox on the launch plan.",
+        ],
+        visual: {
+          src: "/insights/ai-workflow-recovery-mural.webp",
+          alt: "A ceramic workflow mural connecting an AI task record to human approval, restricted tool execution, manual fallback, recovery, and evaluation feedback",
+          label: "Recover without losing the story",
+          caption:
+            "The AI path and the manual path share one durable task history. Failures become visible recovery decisions, and human feedback returns to evaluation without bypassing accountability.",
+        },
+      },
+      {
+        heading: "An AI-assisted workflow review",
+        paragraphs: [
+          "Before releasing an AI automation, I trace a low-risk success, an uncertain case, a provider failure, and a duplicate retry all the way to their user and operational outcomes.",
+        ],
+        points: [
+          "Is the human outcome and the cost of an incorrect decision clear before choosing automation?",
+          "Does the model propose within a contract while the application owns business rules and final state changes?",
+          "Are confidence and missing evidence used to route review rather than bypass authorization?",
+          "Can a reviewer see source context, proposal, uncertainty, applicable policy, and the next available action?",
+          "Does every tool have narrow inputs, explicit permission, bounded execution, timeout, and audit evidence?",
+          "Is there a usable deterministic or human fallback for provider failure, unsafe output, and ambiguous input?",
+          "Are outputs schema-validated and checked against authoritative records before becoming decisions?",
+          "Can retries repeat model work without repeating irreversible side effects or creating duplicate cases?",
+          "Can operators disable or contain a problematic model, tool, prompt, tenant, or pending workflow safely?",
+          "Are review outcomes, corrections, fallback reasons, task completion, cost, and user impact measured together?",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "from-prompt-to-production-evaluating-ai-features-beyond-demo-quality",
+    title: "From Prompt to Production: Evaluating AI Features Beyond Demo Quality",
+    excerpt:
+      "How to build an evaluation practice that connects representative examples, human judgment, safety, cost, latency, and real product outcomes before and after launch.",
+    lead:
+      "A polished demo proves that an AI feature can produce a memorable result. It does not prove that the feature is dependable for the messy requests, edge cases, languages, permissions, and time pressure of a real product. Evaluation turns enthusiasm into a repeatable question: does this system help the intended person complete the intended task, with acceptable risk and cost?",
+    categoryId: "ai-automation",
+    image: "/insights/ai-evaluation-lab.webp",
+    imageAlt: "A handcrafted AI evaluation lab comparing model outputs, human annotations, risk checks, and production-readiness evidence",
+    author: "Sagor Hossain",
+    publishedAt: "2025-11-06",
+    readTime: "13 min read",
+    tags: ["AI Evaluation", "Product Quality", "Observability"],
+    featured: true,
+    sections: [
+      {
+        heading: "A demo proves possibility, not usefulness",
+        paragraphs: [
+          "Demos are intentionally curated. They show a short path, a favorable input, and an output that is easy to recognize as impressive. Production asks different questions. Does the feature handle incomplete context, domain-specific language, contradictory instructions, sensitive information, and the ordinary variation of customers? Does it save time after review, or does it create another draft someone must carefully inspect?",
+          "I define the product promise before selecting a model. A support assistant may promise faster accurate triage, not simply fluent text. A lead-enrichment workflow may promise usable structured fields with traceable evidence, not a confident guess. Evaluation then tests the promise at the level a customer experiences it, while model quality, latency, cost, and safety provide the supporting evidence.",
+        ],
+      },
+      {
+        heading: "Name the task and the acceptable outcome",
+        paragraphs: [
+          "An evaluation item starts with a task, context, expected behavior, and consequence. For a summarizer, the question may be whether a busy operator can find the decision, open risk, owner, and next step without reading the full thread. For an extraction feature, each field needs a definition, allowed absence, source evidence, and treatment of ambiguity. A vague instruction such as make it good cannot produce a stable evaluation.",
+          "I separate hard requirements from preferences. A fabricated account identifier is a critical failure. A slightly less elegant sentence may be acceptable. Some cases should be refused or routed to a person, and that behavior belongs in the expected outcome rather than being labeled a failed answer. The evaluation record stores the version of the task, policy, prompt, model, tools, and source data so a score remains interpretable after the system changes.",
+        ],
+      },
+      {
+        heading: "Build a dataset that resembles the work",
+        paragraphs: [
+          "A small hand-picked set is useful for a smoke test, but it cannot represent a production workflow by itself. I gather examples across common, rare, difficult, and unsafe cases, then stratify them by language, customer segment, input length, domain, and workflow state where those differences affect behavior. Examples include the cases the team hopes to automate and the cases where the correct outcome is to ask, refuse, or use a fallback.",
+          "The dataset needs provenance and privacy controls. I remove unnecessary personal information, record how each example was selected, and keep a stable holdout set that is not repeatedly tuned against. Synthetic cases can expand coverage, but they should be reviewed for realism and not mistaken for evidence of customer impact. A good corpus is not a trophy. It is a maintained instrument that changes when the task, policy, or real failure pattern changes.",
+        ],
+        visual: {
+          src: "/insights/ai-evaluation-matrix.webp",
+          alt: "A handmade research notebook organizing representative AI evaluation examples across quality, safety, consistency, latency, cost, and user outcome",
+          label: "Evaluate the work, not the cherry-picked prompt",
+          caption:
+            "A useful evaluation matrix brings representative inputs, expected behavior, human judgment, safety, cost, latency, and user outcomes into one reviewable artifact.",
+        },
+      },
+      {
+        heading: "Use rubrics that make judgment repeatable",
+        paragraphs: [
+          "Human review remains important for tasks where correctness depends on meaning, tone, usefulness, or context. It also becomes noisy when reviewers receive only a vague five-point scale. I write a rubric with observable criteria, examples of acceptable and unacceptable outcomes, severity levels, and a way to mark insufficient context. Reviewers should be able to explain which criterion failed instead of simply disliking a response.",
+          "Multiple reviewers and calibration examples help identify disagreement. Agreement is not the same as truth, so the rubric is revised when experts consistently debate a boundary or when customer outcomes contradict a high score. Automated graders can accelerate screening for format or known patterns, but consequential decisions receive human or deterministic checks. The evaluation record keeps both the aggregate result and the failures that explain it.",
+        ],
+      },
+      {
+        heading: "Measure safety as behavior in context",
+        paragraphs: [
+          "Safety is not a single score added after quality. A feature can be accurate on ordinary cases and still expose private context, follow an injected instruction, take an action beyond its authority, or give a convincing answer where it should ask for help. I test direct misuse, indirect instructions in retrieved content, sensitive data, privilege boundaries, tool abuse, and attempts to confuse the workflow about its role.",
+          "The correct response depends on context. A refusal may be appropriate for one request and unhelpful for another that can be answered safely with limited information. I record whether the system refused, redirected, requested clarification, cited permitted evidence, or escalated to a person. Threat modeling identifies the dangerous paths, while the evaluation set turns those paths into repeatable regression tests after every prompt, tool, model, or policy change.",
+        ],
+      },
+      {
+        heading: "Include reliability, latency, and cost in the scorecard",
+        paragraphs: [
+          "A high-quality answer that arrives after the operator has moved on may be useless. A cheap model that produces extra review work may cost more than a slower, better route. I measure time to first useful response, complete task latency, timeout and retry rates, token or provider cost, tool calls, fallback frequency, and the amount of human correction. These metrics are segmented by workflow route because one site-wide average hides the experience that actually matters.",
+          "Load and failure tests cover provider rate limits, partial tool results, large inputs, concurrent work, and degraded dependencies. The system has budgets and timeouts that preserve the rest of the product when AI work slows down. A feature can be valuable with a fallback rate that is intentionally high for risky inputs; the decision is whether that rate, cost, and review burden fit the promised outcome. Numbers support the product decision rather than replacing it.",
+        ],
+      },
+      {
+        heading: "Test the assembled feature, not only the model",
+        paragraphs: [
+          "A model benchmark cannot catch a retrieval filter that crosses tenants, a parser that silently drops a field, a tool that executes under the wrong actor, or an interface that hides a refusal behind a spinner. Evaluation covers the complete path: input collection, retrieval, prompt construction, model response, output validation, policy decision, tool execution, persistence, notification, and human review. Each boundary gets the lowest-cost test that still contains its risk.",
+          "I also compare candidate configurations under the same examples and constraints. Prompt changes, model swaps, retrieval settings, temperature, tool descriptions, and fallback rules are treated as versioned changes. A result that improves average quality but harms a protected slice should not pass without an explicit decision. Regression tests protect known failures, while fresh adversarial and production-derived examples stop the suite from becoming a museum of yesterday's problems.",
+        ],
+      },
+      {
+        heading: "Roll out with feedback and a way back",
+        paragraphs: [
+          "Production is an evaluation environment, but customers should not carry the full cost of our uncertainty. I use shadow traffic, internal users, a limited cohort, or a gradual rollout depending on the risk. The release has a baseline, success criteria, protected failure thresholds, a review owner, and a rollback or disable mechanism. Human reviewers know how to report a harmful, misleading, or simply unhelpful result.",
+          "The live system records enough metadata to connect an outcome to the version that produced it without storing more customer content than necessary. Feedback is sampled into a reviewed dataset, changes in input distribution trigger re-evaluation, and monitoring watches for drift in quality, refusal, latency, cost, and escalation. A model upgrade is not complete when the provider changes the default. It is complete when the feature's evidence has been refreshed and the product owner accepts the new tradeoffs.",
+        ],
+        visual: {
+          src: "/insights/ai-production-rollout-theatre.webp",
+          alt: "A handcrafted production rollout theatre showing an AI feature moving through shadow mode, pilot, gradual release, monitoring, feedback, and rollback",
+          label: "Trust is earned in stages",
+          caption:
+            "A staged launch protects users while the team learns from real workflows. Monitoring, feedback, and rollback remain part of the feature after broad release.",
+        },
+      },
+      {
+        heading: "An AI feature evaluation review",
+        paragraphs: [
+          "Before calling an AI feature production-ready, I ask whether the evidence explains both where it helps and where the product should decline, defer, or ask a person to decide.",
+        ],
+        points: [
+          "Is the product promise stated as a customer or operator outcome rather than a model capability?",
+          "Are task definitions, hard requirements, refusals, fallbacks, and consequences explicit?",
+          "Does the evaluation set represent common, rare, unsafe, long, multilingual, and ambiguous inputs?",
+          "Are examples privacy-reviewed, traceable, versioned, and protected by a stable holdout set?",
+          "Do rubrics define observable criteria, severity, insufficient context, and acceptable disagreement?",
+          "Are safety tests built into the workflow context, including retrieval, tools, permissions, and sensitive data?",
+          "Are quality, human correction, task completion, latency, timeout, fallback, and cost measured together?",
+          "Does the assembled product path receive tests beyond the model response itself?",
+          "Are candidate changes compared on protected slices and known failures rather than only on an average score?",
+          "Does rollout include real feedback, drift detection, an accountable owner, and a tested way to disable or roll back?",
+        ],
+      },
+    ],
+  },
 ];
 
 export function getInsightCategory(categoryId: InsightCategoryId) {
