@@ -325,7 +325,7 @@ test("shows one featured insight and supports manual carousel navigation", async
   await expect(insightsSection.locator(".insight-category-icon svg")).toHaveCount(10);
   await expect(activeCard).toHaveCount(1);
   await expect(insightsSection).toContainText("Software Engineering");
-  await expect(insightsSection).toContainText("16 Published");
+  await expect(insightsSection).toContainText("26 Published");
   await expect(carousel.locator(".insight-carousel-pages button")).toHaveCount(6);
   await expect(carousel.locator(".insight-carousel-count")).toHaveCount(0);
   await expect(carousel).toHaveAttribute("data-slide-kind", "insight");
@@ -457,7 +457,7 @@ test("ends the homepage insight selection with a complete index invitation", asy
   await expect(carousel.getByRole("heading", { name: "This five-note selection ends here.", level: 3 })).toBeVisible();
   await expect(carousel).toContainText("End of curated selection");
   await expect(carousel).toContainText("05 / 05");
-  await expect(carousel).toContainText("all 16 engineering notes");
+  await expect(carousel).toContainText("all 26 engineering notes");
   await expect(carousel.locator(".insight-index-end-orbit svg")).toHaveCount(3);
   await expect(carousel.locator(".insight-index-end-art img")).toBeVisible();
   await expect(carousel.getByRole("link", { name: "Enter the Insights Index", exact: true })).toHaveAttribute("href", "/insights/");
@@ -482,15 +482,15 @@ test("browses, filters, and opens the dedicated Insights Index", async ({ page }
   await page.reload();
   await expect(spotlight).toHaveAttribute("data-spotlight-ready", "true");
   await expect(spotlight).not.toHaveAttribute("data-spotlight-insight", firstSpotlight!);
-  await expect(page.getByText("16", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("26", { exact: true }).first()).toBeVisible();
   await expect(page.getByRole("complementary", { name: "Filter insights by category" }).getByRole("button")).toHaveCount(11);
 
   const indexPanel = page.locator("[data-view-mode]");
   const articles = page.locator("main article");
-  await expect(indexPanel).toHaveAttribute("data-result-count", "16");
-  await expect(articles).toHaveCount(16);
+  await expect(indexPanel).toHaveAttribute("data-result-count", "26");
+  await expect(articles).toHaveCount(26);
   const readActions = articles.getByRole("link", { name: "Read Insight", exact: true });
-  await expect(readActions).toHaveCount(16);
+  await expect(readActions).toHaveCount(26);
   const actionWidthRatios = await readActions.evaluateAll((links) => links.map((link) => {
     const footer = link.closest("footer");
     return footer ? link.getBoundingClientRect().width / footer.getBoundingClientRect().width : 0;
@@ -515,13 +515,38 @@ test("browses, filters, and opens the dedicated Insights Index", async ({ page }
   await expect(articles.getByRole("heading", { name: "Building AI-Assisted Workflows with Human Approval and Reliable Fallbacks" })).toBeVisible();
   await expect(articles.getByRole("heading", { name: "From Prompt to Production: Evaluating AI Features Beyond Demo Quality" })).toBeVisible();
 
+  await page.getByRole("button", { name: /SaaS Development/ }).click();
+  await expect(indexPanel).toHaveAttribute("data-result-count", "2");
+  await expect(articles).toHaveCount(2);
+  await expect(articles.getByRole("heading", { name: "Designing SaaS Billing and Entitlements That Stay in Sync" })).toBeVisible();
+  await expect(articles.getByRole("heading", { name: "Designing SaaS Onboarding Around the First Meaningful Outcome" })).toBeVisible();
+
   await page.getByRole("button", { name: /DevOps & Cloud/ }).click();
-  await expect(indexPanel).toHaveAttribute("data-result-count", "0");
-  await expect(articles).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "No notes found in this lane" })).toBeVisible();
+  await expect(indexPanel).toHaveAttribute("data-result-count", "2");
+  await expect(articles).toHaveCount(2);
+  await expect(articles.getByRole("heading", { name: "Shipping Cloud Changes Safely with Progressive Delivery and Fast Rollback" })).toBeVisible();
+  await expect(articles.getByRole("heading", { name: "Building Observability That Leads from User Impact to Root Cause" })).toBeVisible();
+
+  await page.getByRole("button", { name: /Databases & Performance/ }).click();
+  await expect(indexPanel).toHaveAttribute("data-result-count", "2");
+  await expect(articles).toHaveCount(2);
+  await expect(articles.getByRole("heading", { name: "Designing Database Indexes from Query Plans, Not Guesswork" })).toBeVisible();
+  await expect(articles.getByRole("heading", { name: "Designing Caches That Stay Fast Without Lying to Users" })).toBeVisible();
+
+  await page.getByRole("button", { name: /Security & Reliability/ }).click();
+  await expect(indexPanel).toHaveAttribute("data-result-count", "2");
+  await expect(articles).toHaveCount(2);
+  await expect(articles.getByRole("heading", { name: "Building Secure-by-Default Applications Clients Can Trust" })).toBeVisible();
+  await expect(articles.getByRole("heading", { name: "Designing Reliable Systems Around Recovery, Evidence, and Customer Trust" })).toBeVisible();
+
+  await page.getByRole("button", { name: /Project Case Studies/ }).click();
+  await expect(indexPanel).toHaveAttribute("data-result-count", "2");
+  await expect(articles).toHaveCount(2);
+  await expect(articles.getByRole("heading", { name: "Case Study: Building Zappilo Around the Customer Conversation" })).toBeVisible();
+  await expect(articles.getByRole("heading", { name: "Case Study: Turning LeadsFriday Into a B2B Data Workflow" })).toBeVisible();
 
   await page.getByRole("button", { name: "Reset index" }).last().click();
-  await expect(indexPanel).toHaveAttribute("data-result-count", "16");
+  await expect(indexPanel).toHaveAttribute("data-result-count", "26");
   await page.getByRole("button", { name: "List view" }).click();
   await expect(indexPanel).toHaveAttribute("data-view-mode", "list");
 
@@ -896,6 +921,236 @@ test("opens the AI evaluation insight", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "An AI feature evaluation review" })).toBeVisible();
   await expect(page.getByAltText("A handmade research notebook organizing representative AI evaluation examples across quality, safety, consistency, latency, cost, and user outcome")).toBeVisible();
   await expect(page.getByAltText("A handcrafted production rollout theatre showing an AI feature moving through shadow mode, pilot, gradual release, monitoring, feedback, and rollback")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the synchronized SaaS billing insight", async ({ page }) => {
+  await page.goto("/insights/designing-saas-billing-and-entitlements-that-stay-in-sync/");
+
+  await expect(page.getByRole("heading", { name: "Designing SaaS Billing and Entitlements That Stay in Sync", level: 1 })).toBeVisible();
+  await expect(page.getByText("February 12, 2026")).toBeVisible();
+  await expect(page.getByText("13 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight SaaS Development");
+  await expect(page.getByAltText("A handcrafted mechanical SaaS billing system keeping subscription plans, invoices, payment verification, and product access synchronized with a visible exception lane")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Separate money, subscription state, and access" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Reconcile before customers find the mismatch" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A trustworthy SaaS billing review" })).toBeVisible();
+  await expect(page.getByAltText("A screen-printed railway switchyard routing subscription trials, renewals, pauses, cancellations, grace periods, and recovery toward distinct feature-access gates")).toBeVisible();
+  await expect(page.getByAltText("A documentary watchmaker bench where two parallel mechanical ledgers are compared token by token and mismatches are separated for accountable repair")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the first-value SaaS onboarding insight", async ({ page }) => {
+  await page.goto("/insights/designing-saas-onboarding-around-the-first-meaningful-outcome/");
+
+  await expect(page.getByRole("heading", { name: "Designing SaaS Onboarding Around the First Meaningful Outcome", level: 1 })).toBeVisible();
+  await expect(page.getByText("September 18, 2025")).toBeVisible();
+  await expect(page.getByText("12 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight SaaS Development");
+  await expect(page.getByAltText("A cut-paper SaaS onboarding environment guiding a new customer team through essential setup, collaborative work, accessible support, and one meaningful completed outcome")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Define one meaningful first outcome" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Measure evidence, friction, and recovery together" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A first-value onboarding review" })).toBeVisible();
+  await expect(page.getByAltText("A handmade gouache journey journal showing arrival with a goal, a focused choice, guided first work, a recoverable obstacle, and a useful result shared with a teammate")).toBeVisible();
+  await expect(page.getByAltText("A handcrafted activation evidence table connecting customer journey paths, friction markers, elapsed-time discs, support conversations, cohorts, and a working first outcome")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the progressive cloud delivery insight", async ({ page }) => {
+  await page.goto("/insights/shipping-cloud-changes-safely-with-progressive-delivery-and-fast-rollback/");
+
+  await expect(page.getByRole("heading", { name: "Shipping Cloud Changes Safely with Progressive Delivery and Fast Rollback", level: 1 })).toBeVisible();
+  await expect(page.getByText("January 27, 2026")).toBeVisible();
+  await expect(page.getByText("13 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight DevOps & Cloud");
+  await expect(page.getByAltText("A live bridge receiving a new section through controlled stages while traffic continues on a stable lane and the previous section remains available for rollback")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Build once and promote the same artifact" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Make data and interfaces survive mixed versions" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A progressive delivery review" })).toBeVisible();
+  await expect(page.getByAltText("A Swiss-style risograph showing one identical release package moving through source, build, test, security, canary, and production evidence gates with a return path")).toBeVisible();
+  await expect(page.getByAltText("An indigo sashiko textile showing old and new application versions coexisting through an additive data change, traffic shift, backfill, cleanup, and stitched reversal path")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the actionable observability insight", async ({ page }) => {
+  await page.goto("/insights/building-observability-that-leads-from-user-impact-to-root-cause/");
+
+  await expect(page.getByRole("heading", { name: "Building Observability That Leads from User Impact to Root Cause", level: 1 })).toBeVisible();
+  await expect(page.getByText("July 10, 2025")).toBeVisible();
+  await expect(page.getByText("13 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight DevOps & Cloud");
+  await expect(page.getByAltText("A museum-scale optical installation carrying one user request through several cloud services while correlated metrics, traces, and event signals reveal one faulty stage")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Define reliability at a service boundary" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Page only when a person can improve the outcome" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "An actionable observability review" })).toBeVisible();
+  await expect(page.getByAltText("A handcrafted forensic map aligning metric trends, traced request paths, structured event cards, and service changes around one customer-visible failure")).toBeVisible();
+  await expect(page.getByAltText("A documentary incident-response table linking one user-impact marker to service ownership, correlated evidence, a runbook, recent changes, mitigation, and a decision timeline")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the database query plan and index design insight", async ({ page }) => {
+  await page.goto("/insights/designing-database-indexes-from-query-plans-not-guesswork/");
+
+  await expect(page.getByRole("heading", { name: "Designing Database Indexes from Query Plans, Not Guesswork", level: 1 })).toBeVisible();
+  await expect(page.getByText("April 29, 2026")).toBeVisible();
+  await expect(page.getByText("13 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight Databases & Performance");
+  await expect(page.getByAltText("A glass database performance lab showing query routes, plan sheets, indexes, cardinality signals, and a latency dial on a dark studio table")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Read the query plan like a story" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Measure read wins against write cost" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A database indexing review" })).toBeVisible();
+  await expect(page.getByAltText("An engraved cartography desk showing a database query planner choosing railway routes through table blocks, index towers, joins, sorting, and returned rows")).toBeVisible();
+  await expect(page.getByAltText("A watchmaker-style database workbench where precision index gears are fitted beside a live query lane and measured against before-and-after latency gauges")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the cache correctness and performance insight", async ({ page }) => {
+  await page.goto("/insights/designing-caches-that-stay-fast-without-lying-to-users/");
+
+  await expect(page.getByRole("heading", { name: "Designing Caches That Stay Fast Without Lying to Users", level: 1 })).toBeVisible();
+  await expect(page.getByText("December 4, 2025")).toBeVisible();
+  await expect(page.getByText("13 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight Databases & Performance");
+  await expect(page.getByAltText("A neon glass cache routing room connecting an application gateway, colorful cache shelves, freshness signals, invalidation paths, and a golden database vault")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Decide freshness before implementation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Prevent miss storms and cache failure" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A reliable caching review" })).toBeVisible();
+  await expect(page.getByAltText("A handmade screen-print diagram showing cache keys, versioned namespaces, freshness windows, invalidation messages, and refreshed views as layered translucent sheets")).toBeVisible();
+  await expect(page.getByAltText("A black-paper relief map showing request streams, cache nodes, miss storms, breaker gates, queue buffers, and a protected authoritative database core")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the secure-by-default application insight", async ({ page }) => {
+  await page.goto("/insights/building-secure-by-default-applications-clients-can-trust/");
+
+  await expect(page.getByRole("heading", { name: "Building Secure-by-Default Applications Clients Can Trust", level: 1 })).toBeVisible();
+  await expect(page.getByText("March 5, 2026")).toBeVisible();
+  await expect(page.getByText("13 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight Security & Reliability");
+  await expect(page.getByAltText("A stained-glass secure application fortress with layered policy gates, protected product data, audit signals, and a separated risk lane")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Authorize every action at the resource boundary" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Treat secrets and configuration as live assets" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A secure-by-default application review" })).toBeVisible();
+  await expect(page.getByAltText("A paper-and-acrylic authorization archive where request tokens pass through policy gates before reaching protected resources while denied paths are separated")).toBeVisible();
+  await expect(page.getByAltText("A dark ceramic secrets vault routing encrypted capsules through a rotation wheel into scoped application containers with audit beads and a revoked path")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the recovery-centered reliability insight", async ({ page }) => {
+  await page.goto("/insights/designing-reliable-systems-around-recovery-evidence-and-customer-trust/");
+
+  await expect(page.getByRole("heading", { name: "Designing Reliable Systems Around Recovery, Evidence, and Customer Trust", level: 1 })).toBeVisible();
+  await expect(page.getByText("August 28, 2025")).toBeVisible();
+  await expect(page.getByText("13 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight Security & Reliability");
+  await expect(page.getByAltText("A resilience command room model where healthy service lanes continue while one damaged lane is isolated, repaired, and returned through an evidence board")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Turn journeys into service objectives" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Run incidents with ownership and evidence" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A reliability and recovery review" })).toBeVisible();
+  await expect(page.getByAltText("A Bauhaus-style kinetic reliability board showing user journey lanes, service objective gauges, error budget burn, alert thresholds, and release decision gates")).toBeVisible();
+  await expect(page.getByAltText("A handmade incident recovery navigation map showing detection, triage, mitigation, communication, restore, and learning paths across stormy water toward a stable harbor")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the Zappilo project case study insight", async ({ page }) => {
+  await page.goto("/insights/case-study-building-zappilo-around-the-customer-conversation/");
+
+  await expect(page.getByRole("heading", { name: "Case Study: Building Zappilo Around the Customer Conversation", level: 1 })).toBeVisible();
+  await expect(page.getByText("May 22, 2026")).toBeVisible();
+  await expect(page.getByText("13 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight Project Case Studies");
+  await expect(page.getByAltText("A cinematic Zappilo case-study diorama showing conversation streams, CRM context, campaign scheduling, automation controls, and a human handoff lane around one central operating console")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Make the inbox an operating surface" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Permission design protects team confidence" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A Zappilo case-study review" })).toBeVisible();
+  await expect(page.getByAltText("A handmade Zappilo workflow map where conversation cards move through assignment, CRM context, campaign follow-up, calendar action, and reporting evidence")).toBeVisible();
+  await expect(page.getByAltText("A Zappilo AI handoff theatre showing conversation context, AI proposal cards, policy guardrails, human review controls, takeover, and a learning feedback loop")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the LeadsFriday project case study insight", async ({ page }) => {
+  await page.goto("/insights/case-study-turning-leadsfriday-into-a-b2b-data-workflow/");
+
+  await expect(page.getByRole("heading", { name: "Case Study: Turning LeadsFriday Into a B2B Data Workflow", level: 1 })).toBeVisible();
+  await expect(page.getByText("November 13, 2025")).toBeVisible();
+  await expect(page.getByText("13 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight Project Case Studies");
+  await expect(page.getByAltText("A cinematic LeadsFriday case-study data refinery where raw lead signals move through enrichment, verification, credit tracking, export packaging, and team operations")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Treat quality as part of the workflow" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Worker-backed architecture keeps the interface calm" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A LeadsFriday case-study review" })).toBeVisible();
+  await expect(page.getByAltText("A LeadsFriday quality pipeline where colored lead cards pass through source trays, enrichment lenses, verification gates, deduplication shelves, and export crates")).toBeVisible();
+  await expect(page.getByAltText("A LeadsFriday operations terminal with credit tokens, order capsules, worker queue lanes, retry loops, support lights, and delivered file packages")).toBeVisible();
   await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
   await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
 
