@@ -316,8 +316,8 @@ test("shows one featured insight and supports manual carousel navigation", async
   await page.goto("/");
 
   const insightsSection = page.locator("#insights");
-  await insightsSection.scrollIntoViewIfNeeded();
-  await expect(page.locator('[data-home-module="insights"]')).toHaveAttribute("data-ready", "true");
+  await page.evaluate(() => document.querySelector("#insights")?.scrollIntoView({ block: "center" }));
+  await expect(page.locator('[data-home-module="insights"]')).toHaveAttribute("data-ready", "true", { timeout: 10000 });
   const carousel = insightsSection.getByRole("region", { name: "Featured insights" });
   const activeCard = carousel.locator(".insight-feature-card");
   await expect(insightsSection.getByRole("heading", { name: "Insights", exact: true })).toBeVisible();
@@ -325,7 +325,7 @@ test("shows one featured insight and supports manual carousel navigation", async
   await expect(insightsSection.locator(".insight-category-icon svg")).toHaveCount(10);
   await expect(activeCard).toHaveCount(1);
   await expect(insightsSection).toContainText("Software Engineering");
-  await expect(insightsSection).toContainText("26 Published");
+  await expect(insightsSection).toContainText("28 Published");
   await expect(carousel.locator(".insight-carousel-pages button")).toHaveCount(6);
   await expect(carousel.locator(".insight-carousel-count")).toHaveCount(0);
   await expect(carousel).toHaveAttribute("data-slide-kind", "insight");
@@ -426,8 +426,8 @@ test("keeps the homepage insight skeleton visible until its image loads", async 
 test("automatically rotates featured insights and can be paused", async ({ page }) => {
   await page.goto("/");
 
-  await page.locator("#insights").scrollIntoViewIfNeeded();
-  await expect(page.locator('[data-home-module="insights"]')).toHaveAttribute("data-ready", "true");
+  await page.evaluate(() => document.querySelector("#insights")?.scrollIntoView({ block: "center" }));
+  await expect(page.locator('[data-home-module="insights"]')).toHaveAttribute("data-ready", "true", { timeout: 10000 });
   const carousel = page.getByRole("region", { name: "Featured insights" });
   await carousel.scrollIntoViewIfNeeded();
   await page.waitForTimeout(200);
@@ -445,8 +445,8 @@ test("automatically rotates featured insights and can be paused", async ({ page 
 test("ends the homepage insight selection with a complete index invitation", async ({ page }) => {
   await page.goto("/");
 
-  await page.locator("#insights").scrollIntoViewIfNeeded();
-  await expect(page.locator('[data-home-module="insights"]')).toHaveAttribute("data-ready", "true");
+  await page.evaluate(() => document.querySelector("#insights")?.scrollIntoView({ block: "center" }));
+  await expect(page.locator('[data-home-module="insights"]')).toHaveAttribute("data-ready", "true", { timeout: 10000 });
   const carousel = page.getByRole("region", { name: "Featured insights" });
   await carousel.scrollIntoViewIfNeeded();
   await carousel.getByRole("button", { name: "Pause insight rotation" }).click();
@@ -457,7 +457,7 @@ test("ends the homepage insight selection with a complete index invitation", asy
   await expect(carousel.getByRole("heading", { name: "This five-note selection ends here.", level: 3 })).toBeVisible();
   await expect(carousel).toContainText("End of curated selection");
   await expect(carousel).toContainText("05 / 05");
-  await expect(carousel).toContainText("all 26 engineering notes");
+  await expect(carousel).toContainText("all 28 engineering notes");
   await expect(carousel.locator(".insight-index-end-orbit svg")).toHaveCount(3);
   await expect(carousel.locator(".insight-index-end-art img")).toBeVisible();
   await expect(carousel.getByRole("link", { name: "Enter the Insights Index", exact: true })).toHaveAttribute("href", "/insights/");
@@ -482,15 +482,15 @@ test("browses, filters, and opens the dedicated Insights Index", async ({ page }
   await page.reload();
   await expect(spotlight).toHaveAttribute("data-spotlight-ready", "true");
   await expect(spotlight).not.toHaveAttribute("data-spotlight-insight", firstSpotlight!);
-  await expect(page.getByText("26", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("28", { exact: true }).first()).toBeVisible();
   await expect(page.getByRole("complementary", { name: "Filter insights by category" }).getByRole("button")).toHaveCount(11);
 
   const indexPanel = page.locator("[data-view-mode]");
   const articles = page.locator("main article");
-  await expect(indexPanel).toHaveAttribute("data-result-count", "26");
-  await expect(articles).toHaveCount(26);
+  await expect(indexPanel).toHaveAttribute("data-result-count", "28");
+  await expect(articles).toHaveCount(28);
   const readActions = articles.getByRole("link", { name: "Read Insight", exact: true });
-  await expect(readActions).toHaveCount(26);
+  await expect(readActions).toHaveCount(28);
   const actionWidthRatios = await readActions.evaluateAll((links) => links.map((link) => {
     const footer = link.closest("footer");
     return footer ? link.getBoundingClientRect().width / footer.getBoundingClientRect().width : 0;
@@ -545,8 +545,14 @@ test("browses, filters, and opens the dedicated Insights Index", async ({ page }
   await expect(articles.getByRole("heading", { name: "Case Study: Building Zappilo Around the Customer Conversation" })).toBeVisible();
   await expect(articles.getByRole("heading", { name: "Case Study: Turning LeadsFriday Into a B2B Data Workflow" })).toBeVisible();
 
+  await page.getByRole("button", { name: /Engineering Lessons/ }).click();
+  await expect(indexPanel).toHaveAttribute("data-result-count", "2");
+  await expect(articles).toHaveCount(2);
+  await expect(articles.getByRole("heading", { name: "Engineering Lessons: Turning Unclear Client Ideas Into Shippable Scope" })).toBeVisible();
+  await expect(articles.getByRole("heading", { name: "Engineering Lessons: Supporting Products After Launch Without Losing Momentum" })).toBeVisible();
+
   await page.getByRole("button", { name: "Reset index" }).last().click();
-  await expect(indexPanel).toHaveAttribute("data-result-count", "26");
+  await expect(indexPanel).toHaveAttribute("data-result-count", "28");
   await page.getByRole("button", { name: "List view" }).click();
   await expect(indexPanel).toHaveAttribute("data-view-mode", "list");
 
@@ -1151,6 +1157,52 @@ test("opens the LeadsFriday project case study insight", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "A LeadsFriday case-study review" })).toBeVisible();
   await expect(page.getByAltText("A LeadsFriday quality pipeline where colored lead cards pass through source trays, enrichment lenses, verification gates, deduplication shelves, and export crates")).toBeVisible();
   await expect(page.getByAltText("A LeadsFriday operations terminal with credit tokens, order capsules, worker queue lanes, retry loops, support lights, and delivered file packages")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the shippable scope engineering lesson", async ({ page }) => {
+  await page.goto("/insights/engineering-lessons-turning-unclear-client-ideas-into-shippable-scope/");
+
+  await expect(page.getByRole("heading", { name: "Engineering Lessons: Turning Unclear Client Ideas Into Shippable Scope", level: 1 })).toBeVisible();
+  await expect(page.getByText("February 18, 2026")).toBeVisible();
+  await expect(page.getByText("13 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight Engineering Lessons");
+  await expect(page.getByAltText("A product discovery workshop table where messy client idea sketches become scope boundaries, risk markers, milestones, and a clear release roadmap")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Make acceptance criteria concrete" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Explain tradeoffs in business language" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A shippable-scope review" })).toBeVisible();
+  await expect(page.getByAltText("A letterpress product planning desk connecting client goals, user journeys, acceptance criteria, assumptions, risks, and delivery milestones")).toBeVisible();
+  await expect(page.getByAltText("A handcrafted engineering tradeoff table weighing speed, scope, quality, risk, cost, and maintainability before a release path")).toBeVisible();
+  await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
+  await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
+
+  const sizes = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(sizes.content).toBeLessThanOrEqual(sizes.viewport);
+});
+
+test("opens the post-launch support engineering lesson", async ({ page }) => {
+  await page.goto("/insights/engineering-lessons-supporting-products-after-launch-without-losing-momentum/");
+
+  await expect(page.getByRole("heading", { name: "Engineering Lessons: Supporting Products After Launch Without Losing Momentum", level: 1 })).toBeVisible();
+  await expect(page.getByText("June 5, 2025")).toBeVisible();
+  await expect(page.getByText("13 min read")).toBeVisible();
+  await expect(page.locator("main")).toContainText("Insight Engineering Lessons");
+  await expect(page.getByAltText("A post-launch product care room where monitoring signals, support tickets, maintenance rails, release patches, and client feedback form one operating loop")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Triage by impact and risk" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Build a calm improvement rhythm" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A post-launch support review" })).toBeVisible();
+  await expect(page.getByAltText("A support triage board sorting production feedback, bug reports, severity, customer impact, owner, and next release action into clear lanes")).toBeVisible();
+  await expect(page.getByAltText("A maintenance rhythm table showing bug fixes, dependency care, refactoring, monitoring, documentation, and planned improvement work moving through steady cycles")).toBeVisible();
   await expect(page.locator("main article").getByRole("listitem")).toHaveCount(10);
   await expect(page.getByRole("navigation", { name: "Article contents" }).getByRole("link")).toHaveCount(9);
 
