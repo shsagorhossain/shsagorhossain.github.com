@@ -152,7 +152,7 @@ export function HomeHero() {
             </motion.a>
             <motion.a
               className="button button-quiet"
-              href="mailto:shsagor.11s@gmail.com?subject=Resume%20request"
+              href="/cv/?print=1"
               whileHover={reduceMotion ? undefined : { x: 3 }}
             >
               <Download size={17} />
